@@ -1,0 +1,51 @@
+<project basedir="." default="build" name="libtreap">
+	<property name="libs" value="${basedir}/lib" />
+	<property name="build.src" value="${basedir}/src" />
+	<property name="build.out" value="${basedir}/build" />
+	<property name="build.classes" value="${build.out}/classes" />
+	<property name="build.dist" value="${build.out}/dist" />
+	<property name="final.name" value="libtreap-1.0" />
+
+	<target name="init">
+		<mkdir dir="${build.classes}" />
+		<mkdir dir="${build.dist}"/>
+	</target>
+
+	<target depends="init" name="build">
+		<javac destdir="${build.classes}" encoding="gbk" source="1.6" debug="true">
+			<src path="${build.src}" />
+			<classpath>
+				<path>
+					<fileset dir="${libs}">
+						<include name="**/*.jar" />
+					</fileset>
+				</path>
+			</classpath>
+		</javac>
+	</target>
+
+	<target name="jar" depends="build">
+		<mkdir dir="${build.classes}/META-INF" />
+		<jar jarfile="${build.out}/${final.name}.jar"
+                basedir="${build.classes}" />
+	</target>
+
+	<target name="dist" depends="jar">
+		<copy todir="${build.dist}">
+			<fileset dir="${libs}">
+				<include name="**/*.jar" />
+			</fileset>
+		</copy>
+		<copy todir="${build.dist}">
+			<fileset dir="${build.out}">
+				<include name="${final.name}.jar"/>
+			</fileset>
+		</copy>
+
+	</target>
+
+	<target name="clean">
+		<delete dir="${build.out}" />
+	</target>
+</project>
+

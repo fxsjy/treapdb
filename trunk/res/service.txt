@@ -1,0 +1,10 @@
+namespace java fx.sunjoy.server.gen
+
+service	TreapDBService{
+	void put(1:string key, 2:binary value);
+	binary get(1:string key),
+	map<string,binary> prefix(1:string prefixStr,2:i32 limit),
+	map<string,binary> kmax(1:i32 k),
+	map<string,binary> kmin(1:i32 k),
+	map<string,binary> range(1:string kStart, 2:string kEnd,3:i32 limit)
+} 
