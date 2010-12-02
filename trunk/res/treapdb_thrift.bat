@@ -9,4 +9,11 @@
  -XX:SurvivorRatio=128^
  -XX:MaxTenuringThreshold=0
 rem echo %JAVA_OPTS%
-java %JAVA_OPTS% -cp bin;lib/libthrift.jar;lib/log4j-1.2.15.jar;lib/slf4j-api-1.5.8.jar;lib/slf4j-log4j12-1.5.8.jar fx.sunjoy.FastTreapDB 11811 "./data/treapdb" 64 128
+@set LIBS=^
+lib\libthrift.jar;^
+lib\libtreap-1.0.jar;^
+lib\log4j-1.2.15.jar;^
+lib\slf4j-api-1.5.8.jar;^
+lib\slf4j-log4j12-1.5.8.jar
+
+java %JAVA_OPTS% -cp bin;%LIBS% fx.sunjoy.FastTreapDB 11811 "./data/dbhere" 64 256
