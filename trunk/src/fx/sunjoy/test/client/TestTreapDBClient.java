@@ -10,9 +10,18 @@ public class TestTreapDBClient {
 		ByteBuffer buf = ByteBuffer.allocate(100);
 		for(int i=0;i<100;i++){buf.put((byte)'x');};
 		buf.flip();
-		TreapDBClient client = TreapDBClientFactory.getClient("localhost", 11811);
+		
+		String host ="localhost";
+		int count = 1000000;
+		if(args.length>0){host= args[0];};
+		if(args.length>1){count = Integer.parseInt(args[1]);};
+		
+		
+		TreapDBClient client = TreapDBClientFactory.getClient(host, 11811);
+		
+		
 		long t1 = System.currentTimeMillis();
-		for(int i=0;i<10000000;i++){
+		for(int i=0;i<count;i++){
 			Integer key = (int) (Math.random()*Integer.MAX_VALUE);
 			//System.out.println(String.format("%010d", key));
 			client.put("thing"+String.format("%010d", key),buf);

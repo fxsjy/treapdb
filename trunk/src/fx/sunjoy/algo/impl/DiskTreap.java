@@ -220,12 +220,12 @@ public class DiskTreap<K extends Comparable<K>,V extends Serializable> implement
 		int cp2 = node.key.compareTo(end);
 		
 		if(cp1>=0 && cp2<0){
-			collectRange(node.rNo, start, end, values,limit);
+			collectRange(node.lNo, start, end, values,limit);
 			if(values.size()>=limit){
 				return ;
 			}
 			values.put(node.key, node.value);
-			collectRange(node.lNo, start, end, values,limit);
+			collectRange(node.rNo, start, end, values,limit);
 		}
 		if(cp1<0)
 			collectRange(node.rNo, start, end, values,limit);
@@ -320,18 +320,20 @@ public class DiskTreap<K extends Comparable<K>,V extends Serializable> implement
 				this.blockUtil.writeNode(startNode, currentNode, true);
 			}else if(cp<0){
 				currentNode.rNo = insert(currentNode.rNo,key,value);
-				this.blockUtil.writeNode(startNode, currentNode, false);
 				DiskTreapNode<K, V> rightNode = this.blockUtil.readNode(currentNode.rNo, false);
 				currentNode.r_size = rightNode.r_size+1+rightNode.l_size;
+				this.blockUtil.writeNode(startNode, currentNode, false);
+				
 				if(rightNode.fix < currentNode.fix){
 					startNode = rotateLeft(startNode);
 				}
 				
 			}else if(cp>0){
 				currentNode.lNo = insert(currentNode.lNo,key,value);
-				this.blockUtil.writeNode(startNode, currentNode, false);
 				DiskTreapNode< K, V> leftNode = this.blockUtil.readNode(currentNode.lNo, false);
 				currentNode.l_size = leftNode.l_size+1+leftNode.r_size;
+				this.blockUtil.writeNode(startNode, currentNode, false);
+				
 				if(leftNode.fix < currentNode.fix){
 					startNode = rotateRight(startNode);
 				}
