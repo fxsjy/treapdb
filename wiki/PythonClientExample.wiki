@@ -27,7 +27,7 @@ def main():
         client.put(str(i),data)
     for i in xrange(10):
         print i,'=>',client.get(str(i))
-    results = client.prefix('9',5) #at most 5 entries
+    results = client.prefix('9',5) #fetch keys that startswith '9',at most 5 entries
     print results
     transport.close()
     
