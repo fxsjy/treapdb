@@ -28,8 +28,8 @@
 
   11811 is the listening port;
   "./data/dbhere" is the index file path;
-  64 is the index-block-item size (keep it, if your key is not longer that 30 bytes)
-  128 is the memory-map-size (the more the better, if physical memory is big enough;
+  64 is the index-block-item size ("64Bytes". keep it, if your key is not longer that 30 bytes)
+  128 is the memory-map-size ("128MB". the more the better, if physical memory is big enough;
   when index file size is bigger than memory-map-size parameter,disk seeking will be more frequent.)
 
   }}}
