@@ -1,0 +1,9 @@
+#summary One-sentence summary of this page.
+
+== Version1.1 RC==
+    * more API operations added,such as: "remove"(remove a item by key);"length"
+    * improve concurrent reading peformance
+
+== Version 1.0 ==
+    * 2010-12-1
+
