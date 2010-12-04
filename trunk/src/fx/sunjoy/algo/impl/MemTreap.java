@@ -101,8 +101,9 @@ public class MemTreap<K extends Comparable<K>,V> implements ITreap<K, V>  {
 	 * @see fx.sunjoy.algo.impl.ITreap#delete(K)
 	 */
 	@Override
-	public void delete(K key){
+	public boolean delete(K key){
 		remove(this.rootNo,key);
+		return true;
 	}
 	
 	

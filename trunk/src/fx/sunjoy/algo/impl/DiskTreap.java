@@ -59,20 +59,22 @@ public class DiskTreap<K extends Comparable<K>,V extends Serializable> implement
 	@Override
 	public void put(K key,V value){
 		DiskTreapHeader header;
+		if(ByteUtil.isSmallObj(value)){
+			valueCache.put(key, value);
+			bigValueCache.remove(key);
+		}else{
+			valueCache.remove(key);
+			bigValueCache.put(key, value);
+		}
 		try {
 			lock.writeLock().lock();
-			if(ByteUtil.isSmallObj(value)){
-				valueCache.put(key, value);
-				bigValueCache.remove(key);
-			}else{
-				valueCache.remove(key);
-				bigValueCache.put(key, value);
-			}
 			header = this.blockUtil.readHeader();
 			int rootNo = insert(header.rootNo,key,value);
 			header = this.blockUtil.readHeader();
 			header.rootNo = rootNo;
 			this.blockUtil.writeHeader(header);
+			//System.out.println("rootNo:"+rootNo);
+
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}finally{
@@ -86,14 +88,14 @@ public class DiskTreap<K extends Comparable<K>,V extends Serializable> implement
 	 */
 	@Override
 	public V get(K key){
-		lock.readLock().lock();
 		DiskTreapHeader header;
+		if(valueCache.containsKey(key)){
+			return valueCache.get(key);
+		}else if(bigValueCache.containsKey(key)){
+			return bigValueCache.get(key);
+		}
 		try {
-			if(valueCache.containsKey(key)){
-				return valueCache.get(key);
-			}else if(bigValueCache.containsKey(key)){
-				return bigValueCache.get(key);
-			}
+			lock.readLock().lock();
 			header = this.blockUtil.readHeader();
 			int idx =  find(header.rootNo,key);
 			if(idx==-1)return null;
@@ -257,9 +259,90 @@ public class DiskTreap<K extends Comparable<K>,V extends Serializable> implement
 	}
 
 	@Override
-	//删除，暂时没有实现
-	public void delete(K key) {
-		
+	//这个版本的实现会有空间浪费
+	public boolean delete(K key) {
+		DiskTreapHeader header;
+		this.valueCache.remove(key);
+		this.bigValueCache.remove(key);
+		try {
+			lock.writeLock().lock();
+			int old_length = length();
+			header = this.blockUtil.readHeader();
+			int rootNo = remove(header.rootNo,key);
+			header = this.blockUtil.readHeader();
+			header.rootNo = rootNo;
+			this.blockUtil.writeHeader(header);
+			if(old_length==length()){
+				return false; //not found
+			}
+			return true;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}finally{
+			lock.writeLock().unlock();
+		}
+	}
+
+	private int remove(int startNode, K key) throws Exception {
+		if(startNode == -1) return -1;
+		DiskTreapNode<K,V> currentNode = this.blockUtil.readNode(startNode, false);
+		int cp = currentNode.key.compareTo(key);
+		if(cp==0){
+			if(currentNode.lNo==-1 && currentNode.rNo==-1){
+				return -1;
+			}else if(currentNode.rNo==-1){
+				return currentNode.lNo;
+			}else if(currentNode.lNo==-1){
+				return currentNode.rNo;
+			}else{
+				DiskTreapNode<K, V> leftNode = this.blockUtil.readNode(currentNode.lNo, false);
+				DiskTreapNode<K, V> rightNode = this.blockUtil.readNode(currentNode.rNo, false);
+				if(leftNode.fix<rightNode.fix){
+					int newstartNodeNo = rotateRight(startNode);
+					DiskTreapNode<K, V> newstartNode = this.blockUtil.readNode(newstartNodeNo, false);
+					newstartNode.rNo = remove(startNode, key);
+					if(newstartNode.rNo==-1){
+						newstartNode.r_size = 0;
+					}else{
+						DiskTreapNode<K, V>  rN = this.blockUtil.readNode(newstartNode.rNo,false);
+						newstartNode.r_size = 1+rN.l_size+rN.r_size;
+					}
+					this.blockUtil.writeNode(newstartNodeNo,newstartNode,false);
+					return newstartNodeNo;
+				}else{
+					int newstartNodeNo = rotateLeft(startNode);
+					DiskTreapNode<K, V> newstartNode = this.blockUtil.readNode(newstartNodeNo, false);
+					newstartNode.lNo  = remove(startNode, key);
+					if(newstartNode.lNo==-1){
+						newstartNode.l_size = 0;
+					}else{
+						DiskTreapNode<K, V>  lN = this.blockUtil.readNode(newstartNode.lNo,false);
+						newstartNode.l_size = 1+lN.l_size+lN.r_size;
+					}
+					this.blockUtil.writeNode(newstartNodeNo,newstartNode,false);
+					return newstartNodeNo;
+				}
+			}
+		}else if(cp<0){
+			currentNode.rNo = remove(currentNode.rNo,key);
+			if(currentNode.rNo==-1){
+				currentNode.r_size = 0;
+			}else{
+				DiskTreapNode<K, V>  rN = this.blockUtil.readNode(currentNode.rNo,false);
+				currentNode.r_size = 1+rN.l_size+rN.r_size;
+			}
+			this.blockUtil.writeNode(startNode, currentNode, false);
+		}else if(cp>0){
+			currentNode.lNo = remove(currentNode.lNo,key);
+			if(currentNode.lNo==-1){
+				currentNode.l_size = 0;
+			}else{
+				DiskTreapNode<K, V>  lN = this.blockUtil.readNode(currentNode.lNo,false);
+				currentNode.l_size = 1+lN.l_size+lN.r_size;
+			}
+			this.blockUtil.writeNode(startNode, currentNode, false);
+		}
+		return startNode;
 	}
 
 	//前缀搜索

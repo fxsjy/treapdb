@@ -82,7 +82,18 @@ public class TreapDBBinaryProtocolServer implements Iface{
 		Map<String,byte[]> result = treap.range(kStart, kEnd, limit);
 		return byteArraytoBuffer(result);
 	}
-	
+
+	@Override
+	public boolean remove(String key) throws TException {
+		// TODO Auto-generated method stub
+		return treap.delete(key);
+	}
+
+	@Override
+	public int length() throws TException {
+		// TODO Auto-generated method stub
+		return treap.length();
+	}
 	
 	
 }

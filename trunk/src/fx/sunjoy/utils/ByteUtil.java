@@ -197,7 +197,7 @@ public class ByteUtil {
         return bytes;
     }
 	
-	public static boolean isSmallObj(Serializable obj) throws Exception{
+	public static boolean isSmallObj(Serializable obj){
 		if(obj instanceof String){
 			if(obj.toString().length()<500){
 				return true;
@@ -213,7 +213,13 @@ public class ByteUtil {
 			}
 		}
 		else if(!(obj instanceof Integer) && !(obj instanceof Float)){
-			if(xgetBytesFromObject(obj).length>1000){
+			try {
+				if(xgetBytesFromObject(obj).length>1000){
+					return false;
+				}
+			} catch (Exception e) {
+				System.err.println("waring:===");
+				e.printStackTrace();
 				return false;
 			}
 		}

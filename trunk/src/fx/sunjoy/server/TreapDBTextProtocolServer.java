@@ -12,6 +12,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import fx.sunjoy.algo.impl.DiskTreap;
+import fx.sunjoy.server.cmd.DelCommand;
 import fx.sunjoy.server.cmd.GetCommand;
 import fx.sunjoy.server.cmd.KMaxCommand;
 import fx.sunjoy.server.cmd.KMinCommand;
@@ -59,6 +60,8 @@ public class TreapDBTextProtocolServer {
 							new KMaxCommand().execute(diskTreap,msg.command,msg.body, os);
 						}else if(msg.command.startsWith("len")){
 							new LenCommand().execute(diskTreap,msg.command,msg.body, os);
+						}else if(msg.command.startsWith("delete ")){
+							new DelCommand().execute(diskTreap,msg.command,msg.body, os);
 						}else{
 							os.write("ERROR\r\n".getBytes());
 						}
