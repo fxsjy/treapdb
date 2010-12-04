@@ -3,7 +3,7 @@
 == Version1.1 RC==
     * more API operations added,such as: "remove"(remove a item by key);"length"
     * improve concurrent reading peformance
+    * 2010-12-4
 
 == Version 1.0 ==
     * 2010-12-1
-
