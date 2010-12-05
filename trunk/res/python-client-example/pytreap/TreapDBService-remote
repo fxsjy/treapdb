@@ -27,6 +27,8 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
   print '   kmax(i32 k)'
   print '   kmin(i32 k)'
   print '   range(string kStart, string kEnd, i32 limit)'
+  print '  i32 length()'
+  print '  bool remove(string key)'
   print ''
   sys.exit(0)
 
@@ -112,6 +114,18 @@ elif cmd == 'range':
     print 'range requires 3 args'
     sys.exit(1)
   pp.pprint(client.range(args[0],args[1],eval(args[2]),))
+
+elif cmd == 'length':
+  if len(args) != 0:
+    print 'length requires 0 args'
+    sys.exit(1)
+  pp.pprint(client.length())
+
+elif cmd == 'remove':
+  if len(args) != 1:
+    print 'remove requires 1 args'
+    sys.exit(1)
+  pp.pprint(client.remove(args[0],))
 
 else:
   print 'Unrecognized method %s' % cmd
