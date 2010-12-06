@@ -12,8 +12,9 @@ public class TestMemTreap2 {
 		buf.flip();
 		String data = new String(buf.array());
 		long t1 = System.currentTimeMillis();
-		for(int i=0;i<10000000;i++){
-			treap.put("thing"+i,data);
+		for(int i=0;i<1000000;i++){
+			Integer key = (int) (Math.random()*Integer.MAX_VALUE);
+			treap.put("thing"+key,data);
 			//String v = treap.get("thing"+i);
 			if(i%100==0)
 				System.out.println("geting:"+i);

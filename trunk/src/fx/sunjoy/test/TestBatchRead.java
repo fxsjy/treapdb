@@ -19,8 +19,9 @@ public class TestBatchRead {
 			//System.out.println(String.format("%010d", key));
 			treap.put("thing"+String.format("%010d", key),buf.array());
 			//String v = treap.get("thing"+i);
-			if(i%100==0)
+			if(i%100==0){
 				System.out.println("geting:"+i);
+			}
 		}
 		System.out.println(System.currentTimeMillis()-t1);
 	}

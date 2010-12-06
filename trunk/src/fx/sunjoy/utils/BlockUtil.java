@@ -1,6 +1,7 @@
 package fx.sunjoy.utils;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.io.Serializable;
@@ -116,8 +117,9 @@ public class BlockUtil<K extends Comparable<K>,V extends Serializable> {
 	
 	private FileChannel getDataFile(String dataFileName) throws Exception{
 		if(!dataFileMap.containsKey(dataFileName)){
-			RandomAccessFile file = new RandomAccessFile(dataFileName, "rw");
-			dataFileMap.put(dataFileName, file.getChannel());
+			//RandomAccessFile file = new RandomAccessFile(dataFileName, "rw");
+			FileOutputStream appender = new FileOutputStream(dataFileName,true);
+			dataFileMap.put(dataFileName, appender.getChannel());
 		}
 		return dataFileMap.get(dataFileName);
 	}
@@ -240,8 +242,9 @@ public class BlockUtil<K extends Comparable<K>,V extends Serializable> {
 	//读一个节点
 	@SuppressWarnings("unchecked")
 	public DiskTreapNode<K,V>  readNode(int pos,boolean loadValue) throws Exception {
-		if(!loadValue && nodeCache.get(pos)!=null){
-			return nodeCache.get(pos);
+		DiskTreapNode<K,V>  tmp;
+		if(!loadValue &&  (tmp= nodeCache.get(pos))!=null){
+			return tmp;
 		}
 		FileChannel rIndex = getReadOnlyIndex();
 		iocounter++;
@@ -287,15 +290,15 @@ public class BlockUtil<K extends Comparable<K>,V extends Serializable> {
 				}
 				dataFile = getDataFile(dataFileName.getAbsolutePath());
 			}
-			node.valuePtr = (long)dataFile.size();
-			dataFile.position(dataFile.size());
+			node.valuePtr = (long)dataFile.position();
+			//dataFile.position(dataFile.size());
 			iocounter++;
 			dataFile.write(ByteBuffer.wrap(byteValue));
 			node.valueLen = byteValue.length;
 			byteValue = null;
 		}
 		
-		ByteBuffer block = ByteUtil.dumps(node);
+		ByteBuffer block = ByteUtil.dumps(node,blockSize);
 		if(block.limit()>blockSize){
 			throw new Exception("key is too long(键太长了,可以TreapDB启动时调大索引块的size)");
 		}

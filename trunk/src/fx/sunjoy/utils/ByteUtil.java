@@ -124,8 +124,8 @@ public class ByteUtil {
 	}
 	
 	@SuppressWarnings({ "rawtypes" })
-	public static ByteBuffer dumps(DiskTreapNode node){
-		ByteBuffer buf = ByteBuffer.allocate(1024);
+	public static ByteBuffer dumps(DiskTreapNode node,int maxBlockSize){
+		ByteBuffer buf = ByteBuffer.allocate(maxBlockSize);
 		if(node.key instanceof String){
 			byte[] bytes = node.key.toString().getBytes();
 			buf.put((byte)0);

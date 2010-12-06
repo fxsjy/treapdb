@@ -17,8 +17,8 @@ public class TestByteUtil {
 		System.out.println("origin:"+ByteUtil.xgetBytesFromObject(node).length);
 		node.key = "thing10000000";
 		node.fix = 456;
-		System.out.println("raw:"+ByteUtil.dumps(node).limit());
-		DiskTreapNode node2 = ByteUtil.loads(ByteUtil.dumps(node));
+		System.out.println("raw:"+ByteUtil.dumps(node,1024).limit());
+		DiskTreapNode node2 = ByteUtil.loads(ByteUtil.dumps(node,1024));
 		System.out.println("node:"+node2);
 		byte[] nodeBytes = ByteUtil.xgetBytesFromObject(node);
 		byte[] block = Arrays.copyOf(nodeBytes, 440);
