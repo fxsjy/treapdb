@@ -6,7 +6,9 @@ import java.io.IOException;
 import java.io.Serializable;
 
 import fx.sunjoy.algo.impl.DiskTreap;
+import fx.sunjoy.server.TreapDBBinaryProtocolServer;
 import fx.sunjoy.server.TreapDBTextProtocolServer;
+import fx.sunjoy.utils.ConfigUtil;
 
 /**
  * TreapDB server talking memcached
@@ -15,23 +17,33 @@ import fx.sunjoy.server.TreapDBTextProtocolServer;
  */
 public class TreapDB {
 	public static void main(String[] args) throws Exception{
-		int index_block_size = 128;
-		long mmap_size = 64<<20;
-		
-		if(args.length<2){
-			System.out.println("java -cp . fx.sunjoy.TreapDB [port] [file path name] [index block size(bytes)](optional) [memory map size(M)](optional)");
-			return;
+
+		if(args.length < 1)
+		{
+			System.out.println("java -cp . fx.sunjoy.TreapDB [configure file path]") ;
+			return ;
 		}
 		
-		if(args.length>=3){
-			index_block_size = Integer.parseInt(args[2]);
-		}if(args.length==4){
-			mmap_size = Long.parseLong(args[3])<<20;
-		}
-		final int port = Integer.parseInt(args[0]);
-		final DiskTreap<String, Serializable>  diskTreap = new DiskTreap<String, Serializable>(index_block_size,new File(args[1]),mmap_size);
+		String configFilePath = args[0] ;
+		ConfigUtil params = new ConfigUtil(configFilePath) ;
 		
-		final TreapDBTextProtocolServer  server = new TreapDBTextProtocolServer(diskTreap, port);
+		if(!params.isValidConfigFile())
+		{
+			System.out.println("configure file is not valid") ;
+			return ;
+		}
+		
+		int index_block_size = params.getIndexBlockSize() ;
+		long mmap_size = params.getMmapSize() << 20 ; 
+		
+		final int textport = params.getTextPort() ;
+		final int thriftport = params.getThriftPort() ;
+		String index_file_path = params.getIndexFilePath() ;
+		
+		final DiskTreap<String, byte[]>  diskTreap = new DiskTreap<String, byte[]>(index_block_size,new File(index_file_path),mmap_size);
+		
+		final TreapDBTextProtocolServer  Textserver = new TreapDBTextProtocolServer(diskTreap, textport);
+		final TreapDBBinaryProtocolServer ThriftServer = new TreapDBBinaryProtocolServer(diskTreap, thriftport) ;
 		
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 		      public void run() {
@@ -40,17 +52,27 @@ public class TreapDB {
 		      }
 	    });
 		
-		Thread t = new Thread(){
+		Thread textServerThread = new Thread(){
 			public void run(){
 				try {
-					server.run();
+					Textserver.run();
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
 			}
 		};
-		t.setDaemon(true);
-		t.start();
+		textServerThread.setDaemon(true);
+		textServerThread.start();
+		
+		
+		Thread thriftServerThread = new Thread(){
+			public void run(){
+				ThriftServer.run();
+			}
+		};
+		thriftServerThread.setDaemon(true);
+		thriftServerThread.start();
+		
 		String logo ="";
 		logo+="  _____                     ____  ____\n";
 		logo+=" |_   _| __ ___  __ _ _ __ |  _ \\| __ )\n";
@@ -59,14 +81,18 @@ public class TreapDB {
 		logo+="   |_||_|  \\___|\\__,_| .__/|____/|____/\n";
 		logo+="                     |_|\n";
 		System.out.println(logo);
-		System.out.println("Listening Port  : "+port);
-		System.out.println("Index File Path :"+args[1]);
+		System.out.println("Listening memcached mode Port  : "+textport);
+		System.out.println("Listening binary mode Port  : "+thriftport);
+		System.out.println("Index File Path :"+index_file_path);
 		System.out.println("Max Key Size:"+(index_block_size-34)+" Bytes");
 		System.out.println("Index Block Size:"+index_block_size+" Bytes");
 		System.out.println("Memory Map Size :"+mmap_size+" Bytes");
 		System.out.println("Text Protocol Mode(Memcached Compatible)");
+		System.out.println("Fast Binary Protocol Mode");
+		
 		try {
-			t.join();
+			textServerThread.join();
+			thriftServerThread.join() ;
 		} catch (InterruptedException e) {
 			System.out.println("InterruptedException by user.");
 		}

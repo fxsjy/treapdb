@@ -28,12 +28,12 @@ class Msg{
 
 public class TreapDBTextProtocolServer {
 	
-	private DiskTreap<String, Serializable> diskTreap;
+	private DiskTreap<String, byte[]> diskTreap;
 	ServerSocket serverSocket;
 	int port;
 	private ExecutorService pool = Executors.newCachedThreadPool();
 	
-	public TreapDBTextProtocolServer(DiskTreap<String, Serializable> _diskTreap,int _port){
+	public TreapDBTextProtocolServer(DiskTreap<String, byte[]> _diskTreap,int _port){
 		this.diskTreap = _diskTreap;
 		this.port = _port;
 	}

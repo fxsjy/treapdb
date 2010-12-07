@@ -8,7 +8,7 @@ import fx.sunjoy.algo.impl.DiskTreap;
 public class LenCommand extends AbstractCommand {
 
 	@Override
-	public void execute(DiskTreap<String, Serializable> diskTreap,
+	public void execute(DiskTreap<String, byte[]> diskTreap,
 			String command, byte[] body, BufferedOutputStream os)
 			throws Exception {
 		Integer len = diskTreap.length();

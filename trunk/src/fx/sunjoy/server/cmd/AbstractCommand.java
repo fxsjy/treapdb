@@ -12,7 +12,7 @@ public abstract class AbstractCommand {
 	 */
 	enum VALUE_TYPE{STRING,OBJECT,INTEGER};
 	
-	public abstract void execute(DiskTreap<String, Serializable> diskTreap,String command, byte[] body, BufferedOutputStream os) throws Exception;
+	public abstract void execute(DiskTreap<String, byte[]> diskTreap,String command, byte[] body, BufferedOutputStream os) throws Exception;
 	
 	public static VALUE_TYPE getValueType(Object value){
 		if(value instanceof String){

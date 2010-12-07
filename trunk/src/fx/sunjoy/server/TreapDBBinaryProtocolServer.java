@@ -38,20 +38,38 @@ public class TreapDBBinaryProtocolServer implements Iface{
 	
 	@Override
 	public void put(String key, ByteBuffer value) throws TException {
-		treap.put(key, value.array());
+		
+		byte[] maskFlags = new byte[]{0,0,0,0} ;
+		byte[] realvalue = value.array() ;
+		byte[] content = new byte[maskFlags.length + realvalue.length] ;
+		
+		System.arraycopy(maskFlags, 0, content, 0, maskFlags.length) ;
+		System.arraycopy(realvalue, 0, content, maskFlags.length, realvalue.length) ;
+		
+		treap.put(key, content) ;
+		
+		//treap.put(key, value.array());
 	}
 
 	@Override
 	public ByteBuffer get(String key) throws TException {
 		byte[] result = (byte[])treap.get(key);
 		if(result==null)return ByteBuffer.allocate(0);
-		return ByteBuffer.wrap(result);
+		
+		byte[] realvalue = new byte[result.length - 4] ;
+		System.arraycopy(result, 4, realvalue, 0, realvalue.length);
+		
+		return ByteBuffer.wrap(realvalue);
+		//return ByteBuffer.wrap(result);
 	}
 	
 	private Map<String, ByteBuffer> byteArraytoBuffer(Map<String, byte[]> r1) {
 		Map<String,ByteBuffer> r2 = new HashMap<String, ByteBuffer>();
 		for(Entry<String,byte[]> e: r1.entrySet()){
-			r2.put(e.getKey(), ByteBuffer.wrap(e.getValue()) );
+			byte[] realvalue = new byte[e.getValue().length - 4] ;
+			System.arraycopy(e.getValue(), 4, realvalue, 0, realvalue.length) ;
+			r2.put(e.getKey(), ByteBuffer.wrap(realvalue) );
+			//r2.put(e.getKey(), ByteBuffer.wrap(e.getValue()) );
 		}
 		return r2;
 	}

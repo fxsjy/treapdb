@@ -4,15 +4,29 @@ import java.io.BufferedOutputStream;
 import java.io.Serializable;
 
 import fx.sunjoy.algo.impl.DiskTreap;
+import fx.sunjoy.utils.ConvertUtil;
 
 
 public class GetCommand extends AbstractCommand {
 	@Override
-	public void execute(DiskTreap<String, Serializable> diskTreap,String command,byte[] body, BufferedOutputStream os) throws Exception{
+	public void execute(DiskTreap<String, byte[]> diskTreap,String command,byte[] body, BufferedOutputStream os) throws Exception{
 		String[] stuff = command.split(" ");
 		String key = stuff[1];
-		Serializable value = diskTreap.get(key);
-		if(value!=null){
+		byte[] content = diskTreap.get(key);
+		
+		byte[] value = new byte[content.length - 4] ;
+		byte[] flags = new byte[4] ;
+		
+		System.arraycopy(content, 0, flags, 0, flags.length) ;
+		System.arraycopy(content, flags.length, value, 0, value.length) ;
+		
+		int realflags = ConvertUtil.byte2int(flags) ;
+		
+		os.write(("VALUE "+key+" " + realflags +" "+value.length+"\r\n").getBytes());
+		os.write(value);
+		os.write(("\r\n").getBytes());
+		
+		/*if(value!=null){
 			VALUE_TYPE valueType = getValueType(value);
 			
 			if(valueType==VALUE_TYPE.STRING){
@@ -32,7 +46,10 @@ public class GetCommand extends AbstractCommand {
 				os.write(("\r\n").getBytes());
 			}
 		}
-		value = null;
+		value = null;*/
+		
+		
+		
 		os.write(("END\r\n").getBytes());
 	}
 }

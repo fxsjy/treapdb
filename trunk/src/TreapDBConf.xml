@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TreapDB>
+	<Params>
+		<Port>
+			<Memcache>11811</Memcache>
+			<Thrift>11812</Thrift>
+		</Port>
+		<Index>
+			<FilePath>D:\test\rrr</FilePath>
+			<BlockSize>128</BlockSize>
+		</Index>
+		<MMapSize>64</MMapSize>
+	</Params>
+</TreapDB>
