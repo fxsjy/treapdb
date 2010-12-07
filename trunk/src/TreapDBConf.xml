@@ -7,8 +7,8 @@
 		</Port>
 		<Index>
 			<FilePath>D:\test\rrr</FilePath>
-			<BlockSize>128</BlockSize>
+			<BlockSize>64</BlockSize>
 		</Index>
-		<MMapSize>64</MMapSize>
+		<MMapSize>128</MMapSize>
 	</Params>
 </TreapDB>

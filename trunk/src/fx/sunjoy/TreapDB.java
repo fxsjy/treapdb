@@ -3,7 +3,6 @@ package fx.sunjoy;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.Serializable;
 
 import fx.sunjoy.algo.impl.DiskTreap;
 import fx.sunjoy.server.TreapDBBinaryProtocolServer;
@@ -81,15 +80,13 @@ public class TreapDB {
 		logo+="   |_||_|  \\___|\\__,_| .__/|____/|____/\n";
 		logo+="                     |_|\n";
 		System.out.println(logo);
-		System.out.println("Listening memcached mode Port  : "+textport);
-		System.out.println("Listening binary mode Port  : "+thriftport);
+		System.out.println("Listening memcached protocol port  : "+textport);
+		System.out.println("Listening thrift protocol port  : "+thriftport);
 		System.out.println("Index File Path :"+index_file_path);
 		System.out.println("Max Key Size:"+(index_block_size-34)+" Bytes");
 		System.out.println("Index Block Size:"+index_block_size+" Bytes");
 		System.out.println("Memory Map Size :"+mmap_size+" Bytes");
-		System.out.println("Text Protocol Mode(Memcached Compatible)");
-		System.out.println("Fast Binary Protocol Mode");
-		
+		System.out.println("Total Record Amount:"+diskTreap.length());
 		try {
 			textServerThread.join();
 			thriftServerThread.join() ;

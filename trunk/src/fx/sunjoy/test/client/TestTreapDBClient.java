@@ -17,7 +17,7 @@ public class TestTreapDBClient {
 		if(args.length>1){count = Integer.parseInt(args[1]);};
 		
 		
-		TreapDBClient client = TreapDBClientFactory.getClient(host, 11811);
+		TreapDBClient client = TreapDBClientFactory.getClient(host, 11812);
 		
 		
 		long t1 = System.currentTimeMillis();
