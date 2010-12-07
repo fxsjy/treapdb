@@ -119,9 +119,9 @@ public class BlockUtil<K extends Comparable<K>,V extends Serializable> {
 		if(!dataFileMap.containsKey(dataFileName)){
 			//RandomAccessFile file = new RandomAccessFile(dataFileName, "rw");
 			FileOutputStream appender = new FileOutputStream(dataFileName,true);
-			appender.write(new byte[0]);// work round of jdk's bug
 			FileChannel ch = appender.getChannel();
 			//System.out.println("~~~~~"+ch.position());
+			ch.position(ch.size());// work round of jdk's bug
 			dataFileMap.put(dataFileName, ch);
 		}
 		return dataFileMap.get(dataFileName);
