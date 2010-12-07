@@ -11,9 +11,9 @@
 rem echo %JAVA_OPTS%
 @set LIBS=^
 lib\libthrift.jar;^
-lib\libtreap-1.0.jar;^
+lib\libtreap-1.1.jar;^
 lib\log4j-1.2.15.jar;^
 lib\slf4j-api-1.5.8.jar;^
 lib\slf4j-log4j12-1.5.8.jar
 
-java %JAVA_OPTS% -cp bin;%LIBS% fx.sunjoy.FastTreapDB 11811 "./data/dbhere" 64 256
+java %JAVA_OPTS% -cp bin;%LIBS% fx.sunjoy.FastTreapDB 11811 "./data/dbhere" 64 128

@@ -18,6 +18,9 @@ more API operations added: "remove","length"
   * random "get" speed: 15000 tps when key's amount is less than 10,000,000.
 
   * support other operations more than "get" and "set": "kmin", "kmax", "prefix", "len","range".(because it is not hashmap but a balanced search tree.)
+==Benchmark==
+
+  [http://code.google.com/p/treapdb/wiki/SomeBenchmark]
 
 ==RPC Server==
 
@@ -26,9 +29,16 @@ more API operations added: "remove","length"
 
 ==Download & Configure ==
   * click here to download [http://code.google.com/p/treapdb/downloads/list]
+
+  * run
+     * ./treapdb_thrift.sh (server based on thrift protocol)
+     * ./treapdb_mc.sh (server based on memcached protocol)
+
   * configuration:
+
   {{{
-  
+  open scripts above , and modify this line
+
   java $JAVA_OPTS -cp $LIBS fx.sunjoy.FastTreapDB 11811 "./data/dbhere" 64 128
 
   11811 is the listening port;
@@ -39,7 +49,7 @@ more API operations added: "remove","length"
 
   }}}
 
-  Case Study: when memory-map-size is set to 6.4 G, a client insert 0.1 billion key-value pairs to treapdb server with stable speed at 7200(insertion/second). After insertion, the query operation can also response in less than 10 ms.
+  Case Study: when memory-map-size is set to 6.4 G, a client insert 0.1 billion key-value pairs£¨key:30 bytes, value:255 bytes£© to treapdb server with stable speed at 7200(insertion/second). After insertion, the query operation can also response in less than 10 ms.
 
 ==How to build from source==
 
@@ -56,6 +66,19 @@ more API operations added: "remove","length"
      client.put(...)
      client.get(...)
      client.prefix(...)
+     ...
+  }}}
+==Can TreapDB be used in an embedded way?==
+
+  Yes,put libtreap-xx.jar in your app's classpath.
+  {{{
+    DiskTreap<String, Serializable> treap = new DiskTreap<String,Serializable>(64,new File("/usr/local/indexpath"),67108864); 
+//64 is the size of index block, 67108864 is the size of memory map  be used.
+    treap.put(...)
+    treap.get(...)
+    ...
+
+    PS. key can be any type which implements comparable; value can be any type which implements Serializable
   }}}
 
 ==Only Java?==
@@ -69,13 +92,16 @@ more API operations added: "remove","length"
        namespace java fx.sunjoy.server.gen
 
        service	TreapDBService{
-	void put(1:string key, 2:binary value);
-	binary get(1:string key),
-	map<string,binary> prefix(1:string prefixStr,2:i32 limit),
-	map<string,binary> kmax(1:i32 k),
-	map<string,binary> kmin(1:i32 k),
-	map<string,binary> range(1:string kStart, 2:string kEnd,3:i32 limit)
+	   void put(1:string key, 2:binary value);
+	   binary get(1:string key),
+	   map<string,binary> prefix(1:string prefixStr,2:i32 limit),
+	   map<string,binary> kmax(1:i32 k),
+	   map<string,binary> kmin(1:i32 k),
+	   map<string,binary> range(1:string kStart, 2:string kEnd,3:i32 limit),
+	   i32 length(),
+	   bool remove(1:string key)
        } 
+
 
     }}}
 
@@ -89,4 +115,4 @@ more API operations added: "remove","length"
 ==Contact the author==
   * Junyi Sun
   * E-mail: ccnusjy (#$) gmail.com
-
+  * Sponsor: [http://sigsit.ict.ac.cn/ Sino-German Joint Laboratory of Software Integration]
