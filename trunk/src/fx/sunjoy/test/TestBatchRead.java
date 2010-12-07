@@ -8,7 +8,11 @@ import fx.sunjoy.algo.impl.DiskTreap;
 
 public class TestBatchRead {
 	public static void main(String[] args) throws Exception {
-		DiskTreap<String, Serializable> treap = new DiskTreap<String,Serializable>(64,new File("c:/test/treapdb"),64<<20);
+		String path = "c:/test/treapdb";
+		if(args.length>0){
+			path = args[0];
+		}
+		DiskTreap<String, Serializable> treap = new DiskTreap<String,Serializable>(64,new File(path),64<<20);
 		ByteBuffer buf = ByteBuffer.allocate(100);
 		for(int i=0;i<100;i++){buf.put((byte)'x');};
 		buf.flip();
