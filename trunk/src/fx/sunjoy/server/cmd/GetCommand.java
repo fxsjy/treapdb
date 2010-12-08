@@ -4,14 +4,15 @@ import java.io.BufferedOutputStream;
 
 import fx.sunjoy.algo.impl.DiskTreap;
 import fx.sunjoy.utils.ConvertUtil;
+import fx.sunjoy.utils.FastString;
 
 
 public class GetCommand extends AbstractCommand {
 	@Override
-	public void execute(DiskTreap<String, byte[]> diskTreap,String command,byte[] body, BufferedOutputStream os) throws Exception{
+	public void execute(DiskTreap<FastString, byte[]> diskTreap,String command,byte[] body, BufferedOutputStream os) throws Exception{
 		String[] stuff = command.split(" ");
 		String key = stuff[1];
-		byte[] content = diskTreap.get(key);
+		byte[] content = diskTreap.get(new FastString(key));
 		if(content!=null){
 			byte[] value = new byte[content.length - 4] ;
 			byte[] flags = new byte[4] ;

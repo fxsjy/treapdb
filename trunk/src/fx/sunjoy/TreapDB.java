@@ -8,6 +8,7 @@ import fx.sunjoy.algo.impl.DiskTreap;
 import fx.sunjoy.server.TreapDBBinaryProtocolServer;
 import fx.sunjoy.server.TreapDBTextProtocolServer;
 import fx.sunjoy.utils.ConfigUtil;
+import fx.sunjoy.utils.FastString;
 
 /**
  * TreapDB server talking memcached
@@ -39,7 +40,7 @@ public class TreapDB {
 		final int thriftport = params.getThriftPort() ;
 		String index_file_path = params.getIndexFilePath() ;
 		
-		final DiskTreap<String, byte[]>  diskTreap = new DiskTreap<String, byte[]>(index_block_size,new File(index_file_path),mmap_size);
+		final DiskTreap<FastString, byte[]>  diskTreap = new DiskTreap<FastString, byte[]>(index_block_size,new File(index_file_path),mmap_size);
 		
 		final TreapDBTextProtocolServer  Textserver = new TreapDBTextProtocolServer(diskTreap, textport);
 		final TreapDBBinaryProtocolServer ThriftServer = new TreapDBBinaryProtocolServer(diskTreap, thriftport) ;
@@ -83,7 +84,7 @@ public class TreapDB {
 		System.out.println("Listening memcached protocol port  : "+textport);
 		System.out.println("Listening thrift protocol port  : "+thriftport);
 		System.out.println("Index File Path :"+index_file_path);
-		System.out.println("Max Key Size:"+(index_block_size-34)+" Bytes");
+		System.out.println("Max Key Size:"+(index_block_size-38)+" Bytes");
 		System.out.println("Index Block Size:"+index_block_size+" Bytes");
 		System.out.println("Memory Map Size :"+mmap_size+" Bytes");
 		System.out.println("Total Record Amount:"+diskTreap.length());

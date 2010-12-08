@@ -19,6 +19,7 @@ import fx.sunjoy.server.cmd.LenCommand;
 import fx.sunjoy.server.cmd.PrefixCommand;
 import fx.sunjoy.server.cmd.RangeCommand;
 import fx.sunjoy.server.cmd.SetCommand;
+import fx.sunjoy.utils.FastString;
 
 class Msg{
 	String command;
@@ -27,12 +28,12 @@ class Msg{
 
 public class TreapDBTextProtocolServer {
 	
-	private DiskTreap<String, byte[]> diskTreap;
+	private DiskTreap<FastString, byte[]> diskTreap;
 	ServerSocket serverSocket;
 	int port;
 	private ExecutorService pool = Executors.newCachedThreadPool();
 	
-	public TreapDBTextProtocolServer(DiskTreap<String, byte[]> _diskTreap,int _port){
+	public TreapDBTextProtocolServer(DiskTreap<FastString, byte[]> _diskTreap,int _port){
 		this.diskTreap = _diskTreap;
 		this.port = _port;
 	}

@@ -126,7 +126,13 @@ public class ByteUtil {
 	@SuppressWarnings({ "rawtypes" })
 	public static ByteBuffer dumps(DiskTreapNode node,int maxBlockSize){
 		ByteBuffer buf = ByteBuffer.allocate(maxBlockSize);
-		if(node.key instanceof String){
+		if(node.key instanceof FastString){
+			byte[] bytes = ((FastString)node.key).bytes;
+			buf.put((byte)13);
+			buf.putInt(bytes.length); //string's length
+			buf.put(bytes);
+		}
+		else if(node.key instanceof String){
 			byte[] bytes = node.key.toString().getBytes();
 			buf.put((byte)0);
 			buf.putInt(bytes.length); //string's length
@@ -160,7 +166,13 @@ public class ByteUtil {
 		DiskTreapNode node = new DiskTreapNode();
 		byte keyType = buf.get();
 		node.keyType = keyType;
-		if(keyType==0){
+		if(keyType==13){
+			int strLen = buf.getInt();
+			byte[] dest = new byte[strLen];
+			buf.get(dest);
+			node.key = new FastString(dest);
+		}
+		else if(keyType==0){
 			int strLen = buf.getInt();
 			byte[] dest = new byte[strLen];
 			buf.get(dest);
