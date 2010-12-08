@@ -6,7 +6,7 @@
 			<Thrift>11812</Thrift>
 		</Port>
 		<Index>
-			<FilePath>D:\test\rrr</FilePath>
+			<FilePath>/var/log/treapdb/dbhere</FilePath>
 			<BlockSize>64</BlockSize>
 		</Index>
 		<MMapSize>128</MMapSize>

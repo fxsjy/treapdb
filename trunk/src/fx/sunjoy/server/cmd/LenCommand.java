@@ -1,7 +1,6 @@
 package fx.sunjoy.server.cmd;
 
 import java.io.BufferedOutputStream;
-import java.io.Serializable;
 
 import fx.sunjoy.algo.impl.DiskTreap;
 

@@ -1,7 +1,6 @@
 package fx.sunjoy.server.cmd;
 
 import java.io.BufferedOutputStream;
-import java.io.Serializable;
 import java.util.Map;
 import java.util.Map.Entry;
 

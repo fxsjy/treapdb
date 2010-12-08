@@ -4,7 +4,7 @@
 	<property name="build.out" value="${basedir}/build" />
 	<property name="build.classes" value="${build.out}/classes" />
 	<property name="build.dist" value="${build.out}/dist" />
-	<property name="final.name" value="libtreap-1.0" />
+	<property name="final.name" value="libtreap-2.0" />
 
 	<target name="init">
 		<mkdir dir="${build.classes}" />
@@ -22,6 +22,11 @@
 				</path>
 			</classpath>
 		</javac>
+		<copy todir="${build.classes}">
+			<fileset dir="${build.src}">
+				<include name="**/*.properties" />
+			</fileset>
+		</copy>
 	</target>
 
 	<target name="jar" depends="build">
