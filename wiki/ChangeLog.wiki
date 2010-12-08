@@ -4,6 +4,7 @@
     * use XML to configure server parameters
     * memcache server performance improved 30%
     * DiskTreap performance improved 12%
+    * Download(猛击)[http://treapdb.googlecode.com/files/TreapDB_2.0_Alpha1.zip]
     * 2010-12-8
 
 == Version1.1 RC==
