@@ -177,14 +177,16 @@ public class DiskTreap<K extends Comparable<K>,V extends Serializable> implement
 		if(startNode==-1){
 			return;
 		}
-		DiskTreapNode<K, V> node =  this.blockUtil.readNode(startNode,true);
+		DiskTreapNode<K, V> node =  this.blockUtil.readNode(startNode,false);
 		if(k<=node.r_size){
 			collectKMax(node.rNo,k,result);
 		}else if(k==node.r_size+1){
 			collectKMax(node.rNo,node.r_size,result);
+			this.blockUtil.filleNodeValue(node);
 			result.put(node.key, node.value);
 		}else{
 			collectKMax(node.rNo,node.r_size,result);
+			this.blockUtil.filleNodeValue(node);
 			result.put(node.key, node.value);
 			collectKMax(node.lNo,k-node.r_size-1,result);
 		}
@@ -194,14 +196,16 @@ public class DiskTreap<K extends Comparable<K>,V extends Serializable> implement
 		if(startNode==-1){
 			return;
 		}
-		DiskTreapNode<K, V> node =  this.blockUtil.readNode(startNode,true);
+		DiskTreapNode<K, V> node =  this.blockUtil.readNode(startNode,false);
 		if(k<=node.l_size){
 			collectKMin(node.lNo,k,result);
 		}else if(k==node.l_size+1){
+			this.blockUtil.filleNodeValue(node);
 			collectKMin(node.lNo,node.l_size,result);
 			result.put(node.key, node.value);
 		}else{
 			collectKMin(node.lNo,node.l_size,result);
+			this.blockUtil.filleNodeValue(node);
 			result.put(node.key, node.value);
 			collectKMin(node.rNo,k-node.l_size-1,result);
 		}
@@ -217,7 +221,7 @@ public class DiskTreap<K extends Comparable<K>,V extends Serializable> implement
 		if(values.size()>=limit){
 			return ;
 		}
-		DiskTreapNode<K, V> node =  this.blockUtil.readNode(startNode,true);
+		DiskTreapNode<K, V> node =  this.blockUtil.readNode(startNode,false);
 		int cp1 = node.key.compareTo(start);
 		int cp2 = node.key.compareTo(end);
 		
@@ -226,6 +230,7 @@ public class DiskTreap<K extends Comparable<K>,V extends Serializable> implement
 			if(values.size()>=limit){
 				return ;
 			}
+			this.blockUtil.filleNodeValue(node);
 			values.put(node.key, node.value);
 			collectRange(node.rNo, start, end, values,limit);
 		}
@@ -363,11 +368,12 @@ public class DiskTreap<K extends Comparable<K>,V extends Serializable> implement
 	private void prefixSearch(int startNode, K prefixString,Map<K,V> results,int limit) throws Exception {
 		if(startNode==-1)return ;
 		if(results.size()>=limit)return;
-		DiskTreapNode<K, V> cur = this.blockUtil.readNode(startNode, true);
+		DiskTreapNode<K, V> cur = this.blockUtil.readNode(startNode, false);
 		if(prefixString.compareTo(cur.key)<=0){
 			if(isPrefixString(prefixString.toString(),cur.key.toString())){
 				prefixSearch(cur.lNo, prefixString,results,limit);
 				if(results.size()>=limit)return;
+				this.blockUtil.filleNodeValue(cur);
 				results.put(cur.key, cur.value);
 				prefixSearch(cur.rNo, prefixString,results,limit);
 			}else{
@@ -493,11 +499,12 @@ public class DiskTreap<K extends Comparable<K>,V extends Serializable> implement
 	private void prevSearch(int startNode, K key, Map<K, V> results, int limit) throws Exception {
 		if(startNode==-1)return ;
 		if(results.size()>=limit)return;
-		DiskTreapNode<K, V> cur = this.blockUtil.readNode(startNode, true);
+		DiskTreapNode<K, V> cur = this.blockUtil.readNode(startNode, false);
 		int cp = cur.key.compareTo(key);
 		if(cp<0){
 			prevSearch(cur.rNo, key, results, limit);
 			if(results.size()>=limit)return;
+			this.blockUtil.filleNodeValue(cur);
 			results.put(cur.key, cur.value);
 			prevSearch(cur.lNo, key, results, limit);
 		}
@@ -528,11 +535,12 @@ public class DiskTreap<K extends Comparable<K>,V extends Serializable> implement
 	private void nextSearch(int startNode, K key, Map<K, V> results, int limit) throws Exception {
 		if(startNode==-1)return ;
 		if(results.size()>=limit)return;
-		DiskTreapNode<K, V> cur = this.blockUtil.readNode(startNode, true);
+		DiskTreapNode<K, V> cur = this.blockUtil.readNode(startNode, false);
 		int cp = cur.key.compareTo(key);
 		if(cp>0){
 			nextSearch(cur.lNo, key, results, limit);
 			if(results.size()>=limit)return;
+			this.blockUtil.filleNodeValue(cur);
 			results.put(cur.key, cur.value);
 			nextSearch(cur.rNo, key, results, limit);
 		}

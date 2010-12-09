@@ -242,6 +242,19 @@ public class BlockUtil<K extends Comparable<K>,V extends Serializable> {
 		headerBytes = null;
 	}
 	
+	@SuppressWarnings("unchecked")
+	public void filleNodeValue(DiskTreapNode<K,V> node) throws Exception{
+		File dataFileName = new File(indexFileName + ".data"
+				+ node.valueFile);
+		FileChannel dataFile = getReadDataFile(dataFileName
+				.getAbsolutePath());
+		iocounter++;
+		ByteBuffer valueBytes = xgetBytesN(dataFile,node.valuePtr, node.valueLen);
+		node.value = (V) ByteUtil.loadV(valueBytes.array());
+		valueBytes = null;
+	}
+	
+	
 	//读一个节点
 	@SuppressWarnings("unchecked")
 	public DiskTreapNode<K,V>  readNode(int pos,boolean loadValue) throws Exception {
