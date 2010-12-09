@@ -34,13 +34,17 @@ public class TreapDBService {
 
     public ByteBuffer get(String key) throws TException;
 
-    public Map<String,ByteBuffer> prefix(String prefixStr, int limit) throws TException;
+    public List<Pair> prefix(String prefixStr, int limit) throws TException;
 
-    public Map<String,ByteBuffer> kmax(int k) throws TException;
+    public List<Pair> kmax(int k) throws TException;
 
-    public Map<String,ByteBuffer> kmin(int k) throws TException;
+    public List<Pair> kmin(int k) throws TException;
 
-    public Map<String,ByteBuffer> range(String kStart, String kEnd, int limit) throws TException;
+    public List<Pair> range(String kStart, String kEnd, int limit) throws TException;
+
+    public List<Pair> before(String key, int limit) throws TException;
+
+    public List<Pair> after(String key, int limit) throws TException;
 
     public int length() throws TException;
 
@@ -61,6 +65,10 @@ public class TreapDBService {
     public void kmin(int k, AsyncMethodCallback<AsyncClient.kmin_call> resultHandler) throws TException;
 
     public void range(String kStart, String kEnd, int limit, AsyncMethodCallback<AsyncClient.range_call> resultHandler) throws TException;
+
+    public void before(String key, int limit, AsyncMethodCallback<AsyncClient.before_call> resultHandler) throws TException;
+
+    public void after(String key, int limit, AsyncMethodCallback<AsyncClient.after_call> resultHandler) throws TException;
 
     public void length(AsyncMethodCallback<AsyncClient.length_call> resultHandler) throws TException;
 
@@ -175,7 +183,7 @@ public class TreapDBService {
       throw new TApplicationException(TApplicationException.MISSING_RESULT, "get failed: unknown result");
     }
 
-    public Map<String,ByteBuffer> prefix(String prefixStr, int limit) throws TException
+    public List<Pair> prefix(String prefixStr, int limit) throws TException
     {
       send_prefix(prefixStr, limit);
       return recv_prefix();
@@ -192,7 +200,7 @@ public class TreapDBService {
       oprot_.getTransport().flush();
     }
 
-    public Map<String,ByteBuffer> recv_prefix() throws TException
+    public List<Pair> recv_prefix() throws TException
     {
       TMessage msg = iprot_.readMessageBegin();
       if (msg.type == TMessageType.EXCEPTION) {
@@ -212,7 +220,7 @@ public class TreapDBService {
       throw new TApplicationException(TApplicationException.MISSING_RESULT, "prefix failed: unknown result");
     }
 
-    public Map<String,ByteBuffer> kmax(int k) throws TException
+    public List<Pair> kmax(int k) throws TException
     {
       send_kmax(k);
       return recv_kmax();
@@ -228,7 +236,7 @@ public class TreapDBService {
       oprot_.getTransport().flush();
     }
 
-    public Map<String,ByteBuffer> recv_kmax() throws TException
+    public List<Pair> recv_kmax() throws TException
     {
       TMessage msg = iprot_.readMessageBegin();
       if (msg.type == TMessageType.EXCEPTION) {
@@ -248,7 +256,7 @@ public class TreapDBService {
       throw new TApplicationException(TApplicationException.MISSING_RESULT, "kmax failed: unknown result");
     }
 
-    public Map<String,ByteBuffer> kmin(int k) throws TException
+    public List<Pair> kmin(int k) throws TException
     {
       send_kmin(k);
       return recv_kmin();
@@ -264,7 +272,7 @@ public class TreapDBService {
       oprot_.getTransport().flush();
     }
 
-    public Map<String,ByteBuffer> recv_kmin() throws TException
+    public List<Pair> recv_kmin() throws TException
     {
       TMessage msg = iprot_.readMessageBegin();
       if (msg.type == TMessageType.EXCEPTION) {
@@ -284,7 +292,7 @@ public class TreapDBService {
       throw new TApplicationException(TApplicationException.MISSING_RESULT, "kmin failed: unknown result");
     }
 
-    public Map<String,ByteBuffer> range(String kStart, String kEnd, int limit) throws TException
+    public List<Pair> range(String kStart, String kEnd, int limit) throws TException
     {
       send_range(kStart, kEnd, limit);
       return recv_range();
@@ -302,7 +310,7 @@ public class TreapDBService {
       oprot_.getTransport().flush();
     }
 
-    public Map<String,ByteBuffer> recv_range() throws TException
+    public List<Pair> recv_range() throws TException
     {
       TMessage msg = iprot_.readMessageBegin();
       if (msg.type == TMessageType.EXCEPTION) {
@@ -320,6 +328,80 @@ public class TreapDBService {
         return result.success;
       }
       throw new TApplicationException(TApplicationException.MISSING_RESULT, "range failed: unknown result");
+    }
+
+    public List<Pair> before(String key, int limit) throws TException
+    {
+      send_before(key, limit);
+      return recv_before();
+    }
+
+    public void send_before(String key, int limit) throws TException
+    {
+      oprot_.writeMessageBegin(new TMessage("before", TMessageType.CALL, ++seqid_));
+      before_args args = new before_args();
+      args.setKey(key);
+      args.setLimit(limit);
+      args.write(oprot_);
+      oprot_.writeMessageEnd();
+      oprot_.getTransport().flush();
+    }
+
+    public List<Pair> recv_before() throws TException
+    {
+      TMessage msg = iprot_.readMessageBegin();
+      if (msg.type == TMessageType.EXCEPTION) {
+        TApplicationException x = TApplicationException.read(iprot_);
+        iprot_.readMessageEnd();
+        throw x;
+      }
+      if (msg.seqid != seqid_) {
+        throw new TApplicationException(TApplicationException.BAD_SEQUENCE_ID, "before failed: out of sequence response");
+      }
+      before_result result = new before_result();
+      result.read(iprot_);
+      iprot_.readMessageEnd();
+      if (result.isSetSuccess()) {
+        return result.success;
+      }
+      throw new TApplicationException(TApplicationException.MISSING_RESULT, "before failed: unknown result");
+    }
+
+    public List<Pair> after(String key, int limit) throws TException
+    {
+      send_after(key, limit);
+      return recv_after();
+    }
+
+    public void send_after(String key, int limit) throws TException
+    {
+      oprot_.writeMessageBegin(new TMessage("after", TMessageType.CALL, ++seqid_));
+      after_args args = new after_args();
+      args.setKey(key);
+      args.setLimit(limit);
+      args.write(oprot_);
+      oprot_.writeMessageEnd();
+      oprot_.getTransport().flush();
+    }
+
+    public List<Pair> recv_after() throws TException
+    {
+      TMessage msg = iprot_.readMessageBegin();
+      if (msg.type == TMessageType.EXCEPTION) {
+        TApplicationException x = TApplicationException.read(iprot_);
+        iprot_.readMessageEnd();
+        throw x;
+      }
+      if (msg.seqid != seqid_) {
+        throw new TApplicationException(TApplicationException.BAD_SEQUENCE_ID, "after failed: out of sequence response");
+      }
+      after_result result = new after_result();
+      result.read(iprot_);
+      iprot_.readMessageEnd();
+      if (result.isSetSuccess()) {
+        return result.success;
+      }
+      throw new TApplicationException(TApplicationException.MISSING_RESULT, "after failed: unknown result");
     }
 
     public int length() throws TException
@@ -500,7 +582,7 @@ public class TreapDBService {
         prot.writeMessageEnd();
       }
 
-      public Map<String,ByteBuffer> getResult() throws TException {
+      public List<Pair> getResult() throws TException {
         if (getState() != State.RESPONSE_READ) {
           throw new IllegalStateException("Method call not finished!");
         }
@@ -531,7 +613,7 @@ public class TreapDBService {
         prot.writeMessageEnd();
       }
 
-      public Map<String,ByteBuffer> getResult() throws TException {
+      public List<Pair> getResult() throws TException {
         if (getState() != State.RESPONSE_READ) {
           throw new IllegalStateException("Method call not finished!");
         }
@@ -562,7 +644,7 @@ public class TreapDBService {
         prot.writeMessageEnd();
       }
 
-      public Map<String,ByteBuffer> getResult() throws TException {
+      public List<Pair> getResult() throws TException {
         if (getState() != State.RESPONSE_READ) {
           throw new IllegalStateException("Method call not finished!");
         }
@@ -599,13 +681,81 @@ public class TreapDBService {
         prot.writeMessageEnd();
       }
 
-      public Map<String,ByteBuffer> getResult() throws TException {
+      public List<Pair> getResult() throws TException {
         if (getState() != State.RESPONSE_READ) {
           throw new IllegalStateException("Method call not finished!");
         }
         TMemoryInputTransport memoryTransport = new TMemoryInputTransport(getFrameBuffer().array());
         TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
         return (new Client(prot)).recv_range();
+      }
+    }
+
+    public void before(String key, int limit, AsyncMethodCallback<before_call> resultHandler) throws TException {
+      checkReady();
+      before_call method_call = new before_call(key, limit, resultHandler, this, protocolFactory, transport);
+      manager.call(method_call);
+    }
+
+    public static class before_call extends TAsyncMethodCall {
+      private String key;
+      private int limit;
+      public before_call(String key, int limit, AsyncMethodCallback<before_call> resultHandler, TAsyncClient client, TProtocolFactory protocolFactory, TNonblockingTransport transport) throws TException {
+        super(client, protocolFactory, transport, resultHandler, false);
+        this.key = key;
+        this.limit = limit;
+      }
+
+      public void write_args(TProtocol prot) throws TException {
+        prot.writeMessageBegin(new TMessage("before", TMessageType.CALL, 0));
+        before_args args = new before_args();
+        args.setKey(key);
+        args.setLimit(limit);
+        args.write(prot);
+        prot.writeMessageEnd();
+      }
+
+      public List<Pair> getResult() throws TException {
+        if (getState() != State.RESPONSE_READ) {
+          throw new IllegalStateException("Method call not finished!");
+        }
+        TMemoryInputTransport memoryTransport = new TMemoryInputTransport(getFrameBuffer().array());
+        TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
+        return (new Client(prot)).recv_before();
+      }
+    }
+
+    public void after(String key, int limit, AsyncMethodCallback<after_call> resultHandler) throws TException {
+      checkReady();
+      after_call method_call = new after_call(key, limit, resultHandler, this, protocolFactory, transport);
+      manager.call(method_call);
+    }
+
+    public static class after_call extends TAsyncMethodCall {
+      private String key;
+      private int limit;
+      public after_call(String key, int limit, AsyncMethodCallback<after_call> resultHandler, TAsyncClient client, TProtocolFactory protocolFactory, TNonblockingTransport transport) throws TException {
+        super(client, protocolFactory, transport, resultHandler, false);
+        this.key = key;
+        this.limit = limit;
+      }
+
+      public void write_args(TProtocol prot) throws TException {
+        prot.writeMessageBegin(new TMessage("after", TMessageType.CALL, 0));
+        after_args args = new after_args();
+        args.setKey(key);
+        args.setLimit(limit);
+        args.write(prot);
+        prot.writeMessageEnd();
+      }
+
+      public List<Pair> getResult() throws TException {
+        if (getState() != State.RESPONSE_READ) {
+          throw new IllegalStateException("Method call not finished!");
+        }
+        TMemoryInputTransport memoryTransport = new TMemoryInputTransport(getFrameBuffer().array());
+        TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
+        return (new Client(prot)).recv_after();
       }
     }
 
@@ -681,6 +831,8 @@ public class TreapDBService {
       processMap_.put("kmax", new kmax());
       processMap_.put("kmin", new kmin());
       processMap_.put("range", new range());
+      processMap_.put("before", new before());
+      processMap_.put("after", new after());
       processMap_.put("length", new length());
       processMap_.put("remove", new remove());
     }
@@ -859,6 +1011,58 @@ public class TreapDBService {
         range_result result = new range_result();
         result.success = iface_.range(args.kStart, args.kEnd, args.limit);
         oprot.writeMessageBegin(new TMessage("range", TMessageType.REPLY, seqid));
+        result.write(oprot);
+        oprot.writeMessageEnd();
+        oprot.getTransport().flush();
+      }
+
+    }
+
+    private class before implements ProcessFunction {
+      public void process(int seqid, TProtocol iprot, TProtocol oprot) throws TException
+      {
+        before_args args = new before_args();
+        try {
+          args.read(iprot);
+        } catch (TProtocolException e) {
+          iprot.readMessageEnd();
+          TApplicationException x = new TApplicationException(TApplicationException.PROTOCOL_ERROR, e.getMessage());
+          oprot.writeMessageBegin(new TMessage("before", TMessageType.EXCEPTION, seqid));
+          x.write(oprot);
+          oprot.writeMessageEnd();
+          oprot.getTransport().flush();
+          return;
+        }
+        iprot.readMessageEnd();
+        before_result result = new before_result();
+        result.success = iface_.before(args.key, args.limit);
+        oprot.writeMessageBegin(new TMessage("before", TMessageType.REPLY, seqid));
+        result.write(oprot);
+        oprot.writeMessageEnd();
+        oprot.getTransport().flush();
+      }
+
+    }
+
+    private class after implements ProcessFunction {
+      public void process(int seqid, TProtocol iprot, TProtocol oprot) throws TException
+      {
+        after_args args = new after_args();
+        try {
+          args.read(iprot);
+        } catch (TProtocolException e) {
+          iprot.readMessageEnd();
+          TApplicationException x = new TApplicationException(TApplicationException.PROTOCOL_ERROR, e.getMessage());
+          oprot.writeMessageBegin(new TMessage("after", TMessageType.EXCEPTION, seqid));
+          x.write(oprot);
+          oprot.writeMessageEnd();
+          oprot.getTransport().flush();
+          return;
+        }
+        iprot.readMessageEnd();
+        after_result result = new after_result();
+        result.success = iface_.after(args.key, args.limit);
+        oprot.writeMessageBegin(new TMessage("after", TMessageType.REPLY, seqid));
         result.write(oprot);
         oprot.writeMessageEnd();
         oprot.getTransport().flush();
@@ -2431,9 +2635,9 @@ public class TreapDBService {
   public static class prefix_result implements TBase<prefix_result, prefix_result._Fields>, java.io.Serializable, Cloneable   {
     private static final TStruct STRUCT_DESC = new TStruct("prefix_result");
 
-    private static final TField SUCCESS_FIELD_DESC = new TField("success", TType.MAP, (short)0);
+    private static final TField SUCCESS_FIELD_DESC = new TField("success", TType.LIST, (short)0);
 
-    public Map<String,ByteBuffer> success;
+    public List<Pair> success;
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements TFieldIdEnum {
@@ -2499,9 +2703,8 @@ public class TreapDBService {
     static {
       Map<_Fields, FieldMetaData> tmpMap = new EnumMap<_Fields, FieldMetaData>(_Fields.class);
       tmpMap.put(_Fields.SUCCESS, new FieldMetaData("success", TFieldRequirementType.DEFAULT, 
-          new MapMetaData(TType.MAP, 
-              new FieldValueMetaData(TType.STRING), 
-              new FieldValueMetaData(TType.STRING))));
+          new ListMetaData(TType.LIST, 
+              new StructMetaData(TType.STRUCT, Pair.class))));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
       FieldMetaData.addStructMetaDataMap(prefix_result.class, metaDataMap);
     }
@@ -2510,7 +2713,7 @@ public class TreapDBService {
     }
 
     public prefix_result(
-      Map<String,ByteBuffer> success)
+      List<Pair> success)
     {
       this();
       this.success = success;
@@ -2521,18 +2724,9 @@ public class TreapDBService {
      */
     public prefix_result(prefix_result other) {
       if (other.isSetSuccess()) {
-        Map<String,ByteBuffer> __this__success = new HashMap<String,ByteBuffer>();
-        for (Map.Entry<String, ByteBuffer> other_element : other.success.entrySet()) {
-
-          String other_element_key = other_element.getKey();
-          ByteBuffer other_element_value = other_element.getValue();
-
-          String __this__success_copy_key = other_element_key;
-
-          ByteBuffer __this__success_copy_value = TBaseHelper.copyBinary(other_element_value);
-;
-
-          __this__success.put(__this__success_copy_key, __this__success_copy_value);
+        List<Pair> __this__success = new ArrayList<Pair>();
+        for (Pair other_element : other.success) {
+          __this__success.add(new Pair(other_element));
         }
         this.success = __this__success;
       }
@@ -2551,18 +2745,22 @@ public class TreapDBService {
       return (this.success == null) ? 0 : this.success.size();
     }
 
-    public void putToSuccess(String key, ByteBuffer val) {
-      if (this.success == null) {
-        this.success = new HashMap<String,ByteBuffer>();
-      }
-      this.success.put(key, val);
+    public java.util.Iterator<Pair> getSuccessIterator() {
+      return (this.success == null) ? null : this.success.iterator();
     }
 
-    public Map<String,ByteBuffer> getSuccess() {
+    public void addToSuccess(Pair elem) {
+      if (this.success == null) {
+        this.success = new ArrayList<Pair>();
+      }
+      this.success.add(elem);
+    }
+
+    public List<Pair> getSuccess() {
       return this.success;
     }
 
-    public prefix_result setSuccess(Map<String,ByteBuffer> success) {
+    public prefix_result setSuccess(List<Pair> success) {
       this.success = success;
       return this;
     }
@@ -2588,7 +2786,7 @@ public class TreapDBService {
         if (value == null) {
           unsetSuccess();
         } else {
-          setSuccess((Map<String,ByteBuffer>)value);
+          setSuccess((List<Pair>)value);
         }
         break;
 
@@ -2683,19 +2881,18 @@ public class TreapDBService {
         }
         switch (field.id) {
           case 0: // SUCCESS
-            if (field.type == TType.MAP) {
+            if (field.type == TType.LIST) {
               {
-                TMap _map0 = iprot.readMapBegin();
-                this.success = new HashMap<String,ByteBuffer>(2*_map0.size);
-                for (int _i1 = 0; _i1 < _map0.size; ++_i1)
+                TList _list0 = iprot.readListBegin();
+                this.success = new ArrayList<Pair>(_list0.size);
+                for (int _i1 = 0; _i1 < _list0.size; ++_i1)
                 {
-                  String _key2;
-                  ByteBuffer _val3;
-                  _key2 = iprot.readString();
-                  _val3 = iprot.readBinary();
-                  this.success.put(_key2, _val3);
+                  Pair _elem2;
+                  _elem2 = new Pair();
+                  _elem2.read(iprot);
+                  this.success.add(_elem2);
                 }
-                iprot.readMapEnd();
+                iprot.readListEnd();
               }
             } else { 
               TProtocolUtil.skip(iprot, field.type);
@@ -2718,13 +2915,12 @@ public class TreapDBService {
       if (this.isSetSuccess()) {
         oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
         {
-          oprot.writeMapBegin(new TMap(TType.STRING, TType.STRING, this.success.size()));
-          for (Map.Entry<String, ByteBuffer> _iter4 : this.success.entrySet())
+          oprot.writeListBegin(new TList(TType.STRUCT, this.success.size()));
+          for (Pair _iter3 : this.success)
           {
-            oprot.writeString(_iter4.getKey());
-            oprot.writeBinary(_iter4.getValue());
+            _iter3.write(oprot);
           }
-          oprot.writeMapEnd();
+          oprot.writeListEnd();
         }
         oprot.writeFieldEnd();
       }
@@ -3036,9 +3232,9 @@ public class TreapDBService {
   public static class kmax_result implements TBase<kmax_result, kmax_result._Fields>, java.io.Serializable, Cloneable   {
     private static final TStruct STRUCT_DESC = new TStruct("kmax_result");
 
-    private static final TField SUCCESS_FIELD_DESC = new TField("success", TType.MAP, (short)0);
+    private static final TField SUCCESS_FIELD_DESC = new TField("success", TType.LIST, (short)0);
 
-    public Map<String,ByteBuffer> success;
+    public List<Pair> success;
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements TFieldIdEnum {
@@ -3104,9 +3300,8 @@ public class TreapDBService {
     static {
       Map<_Fields, FieldMetaData> tmpMap = new EnumMap<_Fields, FieldMetaData>(_Fields.class);
       tmpMap.put(_Fields.SUCCESS, new FieldMetaData("success", TFieldRequirementType.DEFAULT, 
-          new MapMetaData(TType.MAP, 
-              new FieldValueMetaData(TType.STRING), 
-              new FieldValueMetaData(TType.STRING))));
+          new ListMetaData(TType.LIST, 
+              new StructMetaData(TType.STRUCT, Pair.class))));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
       FieldMetaData.addStructMetaDataMap(kmax_result.class, metaDataMap);
     }
@@ -3115,7 +3310,7 @@ public class TreapDBService {
     }
 
     public kmax_result(
-      Map<String,ByteBuffer> success)
+      List<Pair> success)
     {
       this();
       this.success = success;
@@ -3126,18 +3321,9 @@ public class TreapDBService {
      */
     public kmax_result(kmax_result other) {
       if (other.isSetSuccess()) {
-        Map<String,ByteBuffer> __this__success = new HashMap<String,ByteBuffer>();
-        for (Map.Entry<String, ByteBuffer> other_element : other.success.entrySet()) {
-
-          String other_element_key = other_element.getKey();
-          ByteBuffer other_element_value = other_element.getValue();
-
-          String __this__success_copy_key = other_element_key;
-
-          ByteBuffer __this__success_copy_value = TBaseHelper.copyBinary(other_element_value);
-;
-
-          __this__success.put(__this__success_copy_key, __this__success_copy_value);
+        List<Pair> __this__success = new ArrayList<Pair>();
+        for (Pair other_element : other.success) {
+          __this__success.add(new Pair(other_element));
         }
         this.success = __this__success;
       }
@@ -3156,18 +3342,22 @@ public class TreapDBService {
       return (this.success == null) ? 0 : this.success.size();
     }
 
-    public void putToSuccess(String key, ByteBuffer val) {
-      if (this.success == null) {
-        this.success = new HashMap<String,ByteBuffer>();
-      }
-      this.success.put(key, val);
+    public java.util.Iterator<Pair> getSuccessIterator() {
+      return (this.success == null) ? null : this.success.iterator();
     }
 
-    public Map<String,ByteBuffer> getSuccess() {
+    public void addToSuccess(Pair elem) {
+      if (this.success == null) {
+        this.success = new ArrayList<Pair>();
+      }
+      this.success.add(elem);
+    }
+
+    public List<Pair> getSuccess() {
       return this.success;
     }
 
-    public kmax_result setSuccess(Map<String,ByteBuffer> success) {
+    public kmax_result setSuccess(List<Pair> success) {
       this.success = success;
       return this;
     }
@@ -3193,7 +3383,7 @@ public class TreapDBService {
         if (value == null) {
           unsetSuccess();
         } else {
-          setSuccess((Map<String,ByteBuffer>)value);
+          setSuccess((List<Pair>)value);
         }
         break;
 
@@ -3288,19 +3478,18 @@ public class TreapDBService {
         }
         switch (field.id) {
           case 0: // SUCCESS
-            if (field.type == TType.MAP) {
+            if (field.type == TType.LIST) {
               {
-                TMap _map5 = iprot.readMapBegin();
-                this.success = new HashMap<String,ByteBuffer>(2*_map5.size);
-                for (int _i6 = 0; _i6 < _map5.size; ++_i6)
+                TList _list4 = iprot.readListBegin();
+                this.success = new ArrayList<Pair>(_list4.size);
+                for (int _i5 = 0; _i5 < _list4.size; ++_i5)
                 {
-                  String _key7;
-                  ByteBuffer _val8;
-                  _key7 = iprot.readString();
-                  _val8 = iprot.readBinary();
-                  this.success.put(_key7, _val8);
+                  Pair _elem6;
+                  _elem6 = new Pair();
+                  _elem6.read(iprot);
+                  this.success.add(_elem6);
                 }
-                iprot.readMapEnd();
+                iprot.readListEnd();
               }
             } else { 
               TProtocolUtil.skip(iprot, field.type);
@@ -3323,13 +3512,12 @@ public class TreapDBService {
       if (this.isSetSuccess()) {
         oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
         {
-          oprot.writeMapBegin(new TMap(TType.STRING, TType.STRING, this.success.size()));
-          for (Map.Entry<String, ByteBuffer> _iter9 : this.success.entrySet())
+          oprot.writeListBegin(new TList(TType.STRUCT, this.success.size()));
+          for (Pair _iter7 : this.success)
           {
-            oprot.writeString(_iter9.getKey());
-            oprot.writeBinary(_iter9.getValue());
+            _iter7.write(oprot);
           }
-          oprot.writeMapEnd();
+          oprot.writeListEnd();
         }
         oprot.writeFieldEnd();
       }
@@ -3641,9 +3829,9 @@ public class TreapDBService {
   public static class kmin_result implements TBase<kmin_result, kmin_result._Fields>, java.io.Serializable, Cloneable   {
     private static final TStruct STRUCT_DESC = new TStruct("kmin_result");
 
-    private static final TField SUCCESS_FIELD_DESC = new TField("success", TType.MAP, (short)0);
+    private static final TField SUCCESS_FIELD_DESC = new TField("success", TType.LIST, (short)0);
 
-    public Map<String,ByteBuffer> success;
+    public List<Pair> success;
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements TFieldIdEnum {
@@ -3709,9 +3897,8 @@ public class TreapDBService {
     static {
       Map<_Fields, FieldMetaData> tmpMap = new EnumMap<_Fields, FieldMetaData>(_Fields.class);
       tmpMap.put(_Fields.SUCCESS, new FieldMetaData("success", TFieldRequirementType.DEFAULT, 
-          new MapMetaData(TType.MAP, 
-              new FieldValueMetaData(TType.STRING), 
-              new FieldValueMetaData(TType.STRING))));
+          new ListMetaData(TType.LIST, 
+              new StructMetaData(TType.STRUCT, Pair.class))));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
       FieldMetaData.addStructMetaDataMap(kmin_result.class, metaDataMap);
     }
@@ -3720,7 +3907,7 @@ public class TreapDBService {
     }
 
     public kmin_result(
-      Map<String,ByteBuffer> success)
+      List<Pair> success)
     {
       this();
       this.success = success;
@@ -3731,18 +3918,9 @@ public class TreapDBService {
      */
     public kmin_result(kmin_result other) {
       if (other.isSetSuccess()) {
-        Map<String,ByteBuffer> __this__success = new HashMap<String,ByteBuffer>();
-        for (Map.Entry<String, ByteBuffer> other_element : other.success.entrySet()) {
-
-          String other_element_key = other_element.getKey();
-          ByteBuffer other_element_value = other_element.getValue();
-
-          String __this__success_copy_key = other_element_key;
-
-          ByteBuffer __this__success_copy_value = TBaseHelper.copyBinary(other_element_value);
-;
-
-          __this__success.put(__this__success_copy_key, __this__success_copy_value);
+        List<Pair> __this__success = new ArrayList<Pair>();
+        for (Pair other_element : other.success) {
+          __this__success.add(new Pair(other_element));
         }
         this.success = __this__success;
       }
@@ -3761,18 +3939,22 @@ public class TreapDBService {
       return (this.success == null) ? 0 : this.success.size();
     }
 
-    public void putToSuccess(String key, ByteBuffer val) {
-      if (this.success == null) {
-        this.success = new HashMap<String,ByteBuffer>();
-      }
-      this.success.put(key, val);
+    public java.util.Iterator<Pair> getSuccessIterator() {
+      return (this.success == null) ? null : this.success.iterator();
     }
 
-    public Map<String,ByteBuffer> getSuccess() {
+    public void addToSuccess(Pair elem) {
+      if (this.success == null) {
+        this.success = new ArrayList<Pair>();
+      }
+      this.success.add(elem);
+    }
+
+    public List<Pair> getSuccess() {
       return this.success;
     }
 
-    public kmin_result setSuccess(Map<String,ByteBuffer> success) {
+    public kmin_result setSuccess(List<Pair> success) {
       this.success = success;
       return this;
     }
@@ -3798,7 +3980,7 @@ public class TreapDBService {
         if (value == null) {
           unsetSuccess();
         } else {
-          setSuccess((Map<String,ByteBuffer>)value);
+          setSuccess((List<Pair>)value);
         }
         break;
 
@@ -3893,19 +4075,18 @@ public class TreapDBService {
         }
         switch (field.id) {
           case 0: // SUCCESS
-            if (field.type == TType.MAP) {
+            if (field.type == TType.LIST) {
               {
-                TMap _map10 = iprot.readMapBegin();
-                this.success = new HashMap<String,ByteBuffer>(2*_map10.size);
-                for (int _i11 = 0; _i11 < _map10.size; ++_i11)
+                TList _list8 = iprot.readListBegin();
+                this.success = new ArrayList<Pair>(_list8.size);
+                for (int _i9 = 0; _i9 < _list8.size; ++_i9)
                 {
-                  String _key12;
-                  ByteBuffer _val13;
-                  _key12 = iprot.readString();
-                  _val13 = iprot.readBinary();
-                  this.success.put(_key12, _val13);
+                  Pair _elem10;
+                  _elem10 = new Pair();
+                  _elem10.read(iprot);
+                  this.success.add(_elem10);
                 }
-                iprot.readMapEnd();
+                iprot.readListEnd();
               }
             } else { 
               TProtocolUtil.skip(iprot, field.type);
@@ -3928,13 +4109,12 @@ public class TreapDBService {
       if (this.isSetSuccess()) {
         oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
         {
-          oprot.writeMapBegin(new TMap(TType.STRING, TType.STRING, this.success.size()));
-          for (Map.Entry<String, ByteBuffer> _iter14 : this.success.entrySet())
+          oprot.writeListBegin(new TList(TType.STRUCT, this.success.size()));
+          for (Pair _iter11 : this.success)
           {
-            oprot.writeString(_iter14.getKey());
-            oprot.writeBinary(_iter14.getValue());
+            _iter11.write(oprot);
           }
-          oprot.writeMapEnd();
+          oprot.writeListEnd();
         }
         oprot.writeFieldEnd();
       }
@@ -4424,9 +4604,9 @@ public class TreapDBService {
   public static class range_result implements TBase<range_result, range_result._Fields>, java.io.Serializable, Cloneable   {
     private static final TStruct STRUCT_DESC = new TStruct("range_result");
 
-    private static final TField SUCCESS_FIELD_DESC = new TField("success", TType.MAP, (short)0);
+    private static final TField SUCCESS_FIELD_DESC = new TField("success", TType.LIST, (short)0);
 
-    public Map<String,ByteBuffer> success;
+    public List<Pair> success;
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements TFieldIdEnum {
@@ -4492,9 +4672,8 @@ public class TreapDBService {
     static {
       Map<_Fields, FieldMetaData> tmpMap = new EnumMap<_Fields, FieldMetaData>(_Fields.class);
       tmpMap.put(_Fields.SUCCESS, new FieldMetaData("success", TFieldRequirementType.DEFAULT, 
-          new MapMetaData(TType.MAP, 
-              new FieldValueMetaData(TType.STRING), 
-              new FieldValueMetaData(TType.STRING))));
+          new ListMetaData(TType.LIST, 
+              new StructMetaData(TType.STRUCT, Pair.class))));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
       FieldMetaData.addStructMetaDataMap(range_result.class, metaDataMap);
     }
@@ -4503,7 +4682,7 @@ public class TreapDBService {
     }
 
     public range_result(
-      Map<String,ByteBuffer> success)
+      List<Pair> success)
     {
       this();
       this.success = success;
@@ -4514,18 +4693,9 @@ public class TreapDBService {
      */
     public range_result(range_result other) {
       if (other.isSetSuccess()) {
-        Map<String,ByteBuffer> __this__success = new HashMap<String,ByteBuffer>();
-        for (Map.Entry<String, ByteBuffer> other_element : other.success.entrySet()) {
-
-          String other_element_key = other_element.getKey();
-          ByteBuffer other_element_value = other_element.getValue();
-
-          String __this__success_copy_key = other_element_key;
-
-          ByteBuffer __this__success_copy_value = TBaseHelper.copyBinary(other_element_value);
-;
-
-          __this__success.put(__this__success_copy_key, __this__success_copy_value);
+        List<Pair> __this__success = new ArrayList<Pair>();
+        for (Pair other_element : other.success) {
+          __this__success.add(new Pair(other_element));
         }
         this.success = __this__success;
       }
@@ -4544,18 +4714,22 @@ public class TreapDBService {
       return (this.success == null) ? 0 : this.success.size();
     }
 
-    public void putToSuccess(String key, ByteBuffer val) {
-      if (this.success == null) {
-        this.success = new HashMap<String,ByteBuffer>();
-      }
-      this.success.put(key, val);
+    public java.util.Iterator<Pair> getSuccessIterator() {
+      return (this.success == null) ? null : this.success.iterator();
     }
 
-    public Map<String,ByteBuffer> getSuccess() {
+    public void addToSuccess(Pair elem) {
+      if (this.success == null) {
+        this.success = new ArrayList<Pair>();
+      }
+      this.success.add(elem);
+    }
+
+    public List<Pair> getSuccess() {
       return this.success;
     }
 
-    public range_result setSuccess(Map<String,ByteBuffer> success) {
+    public range_result setSuccess(List<Pair> success) {
       this.success = success;
       return this;
     }
@@ -4581,7 +4755,7 @@ public class TreapDBService {
         if (value == null) {
           unsetSuccess();
         } else {
-          setSuccess((Map<String,ByteBuffer>)value);
+          setSuccess((List<Pair>)value);
         }
         break;
 
@@ -4676,19 +4850,18 @@ public class TreapDBService {
         }
         switch (field.id) {
           case 0: // SUCCESS
-            if (field.type == TType.MAP) {
+            if (field.type == TType.LIST) {
               {
-                TMap _map15 = iprot.readMapBegin();
-                this.success = new HashMap<String,ByteBuffer>(2*_map15.size);
-                for (int _i16 = 0; _i16 < _map15.size; ++_i16)
+                TList _list12 = iprot.readListBegin();
+                this.success = new ArrayList<Pair>(_list12.size);
+                for (int _i13 = 0; _i13 < _list12.size; ++_i13)
                 {
-                  String _key17;
-                  ByteBuffer _val18;
-                  _key17 = iprot.readString();
-                  _val18 = iprot.readBinary();
-                  this.success.put(_key17, _val18);
+                  Pair _elem14;
+                  _elem14 = new Pair();
+                  _elem14.read(iprot);
+                  this.success.add(_elem14);
                 }
-                iprot.readMapEnd();
+                iprot.readListEnd();
               }
             } else { 
               TProtocolUtil.skip(iprot, field.type);
@@ -4711,13 +4884,12 @@ public class TreapDBService {
       if (this.isSetSuccess()) {
         oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
         {
-          oprot.writeMapBegin(new TMap(TType.STRING, TType.STRING, this.success.size()));
-          for (Map.Entry<String, ByteBuffer> _iter19 : this.success.entrySet())
+          oprot.writeListBegin(new TList(TType.STRUCT, this.success.size()));
+          for (Pair _iter15 : this.success)
           {
-            oprot.writeString(_iter19.getKey());
-            oprot.writeBinary(_iter19.getValue());
+            _iter15.write(oprot);
           }
-          oprot.writeMapEnd();
+          oprot.writeListEnd();
         }
         oprot.writeFieldEnd();
       }
@@ -4728,6 +4900,1378 @@ public class TreapDBService {
     @Override
     public String toString() {
       StringBuilder sb = new StringBuilder("range_result(");
+      boolean first = true;
+
+      sb.append("success:");
+      if (this.success == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.success);
+      }
+      first = false;
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws TException {
+      // check for required fields
+    }
+
+  }
+
+  public static class before_args implements TBase<before_args, before_args._Fields>, java.io.Serializable, Cloneable   {
+    private static final TStruct STRUCT_DESC = new TStruct("before_args");
+
+    private static final TField KEY_FIELD_DESC = new TField("key", TType.STRING, (short)1);
+    private static final TField LIMIT_FIELD_DESC = new TField("limit", TType.I32, (short)2);
+
+    public String key;
+    public int limit;
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements TFieldIdEnum {
+      KEY((short)1, "key"),
+      LIMIT((short)2, "limit");
+
+      private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
+
+      static {
+        for (_Fields field : EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          case 1: // KEY
+            return KEY;
+          case 2: // LIMIT
+            return LIMIT;
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final String _fieldName;
+
+      _Fields(short thriftId, String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public String getFieldName() {
+        return _fieldName;
+      }
+    }
+
+    // isset id assignments
+    private static final int __LIMIT_ISSET_ID = 0;
+    private BitSet __isset_bit_vector = new BitSet(1);
+
+    public static final Map<_Fields, FieldMetaData> metaDataMap;
+    static {
+      Map<_Fields, FieldMetaData> tmpMap = new EnumMap<_Fields, FieldMetaData>(_Fields.class);
+      tmpMap.put(_Fields.KEY, new FieldMetaData("key", TFieldRequirementType.DEFAULT, 
+          new FieldValueMetaData(TType.STRING)));
+      tmpMap.put(_Fields.LIMIT, new FieldMetaData("limit", TFieldRequirementType.DEFAULT, 
+          new FieldValueMetaData(TType.I32)));
+      metaDataMap = Collections.unmodifiableMap(tmpMap);
+      FieldMetaData.addStructMetaDataMap(before_args.class, metaDataMap);
+    }
+
+    public before_args() {
+    }
+
+    public before_args(
+      String key,
+      int limit)
+    {
+      this();
+      this.key = key;
+      this.limit = limit;
+      setLimitIsSet(true);
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public before_args(before_args other) {
+      __isset_bit_vector.clear();
+      __isset_bit_vector.or(other.__isset_bit_vector);
+      if (other.isSetKey()) {
+        this.key = other.key;
+      }
+      this.limit = other.limit;
+    }
+
+    public before_args deepCopy() {
+      return new before_args(this);
+    }
+
+    @Override
+    public void clear() {
+      this.key = null;
+      setLimitIsSet(false);
+      this.limit = 0;
+    }
+
+    public String getKey() {
+      return this.key;
+    }
+
+    public before_args setKey(String key) {
+      this.key = key;
+      return this;
+    }
+
+    public void unsetKey() {
+      this.key = null;
+    }
+
+    /** Returns true if field key is set (has been asigned a value) and false otherwise */
+    public boolean isSetKey() {
+      return this.key != null;
+    }
+
+    public void setKeyIsSet(boolean value) {
+      if (!value) {
+        this.key = null;
+      }
+    }
+
+    public int getLimit() {
+      return this.limit;
+    }
+
+    public before_args setLimit(int limit) {
+      this.limit = limit;
+      setLimitIsSet(true);
+      return this;
+    }
+
+    public void unsetLimit() {
+      __isset_bit_vector.clear(__LIMIT_ISSET_ID);
+    }
+
+    /** Returns true if field limit is set (has been asigned a value) and false otherwise */
+    public boolean isSetLimit() {
+      return __isset_bit_vector.get(__LIMIT_ISSET_ID);
+    }
+
+    public void setLimitIsSet(boolean value) {
+      __isset_bit_vector.set(__LIMIT_ISSET_ID, value);
+    }
+
+    public void setFieldValue(_Fields field, Object value) {
+      switch (field) {
+      case KEY:
+        if (value == null) {
+          unsetKey();
+        } else {
+          setKey((String)value);
+        }
+        break;
+
+      case LIMIT:
+        if (value == null) {
+          unsetLimit();
+        } else {
+          setLimit((Integer)value);
+        }
+        break;
+
+      }
+    }
+
+    public Object getFieldValue(_Fields field) {
+      switch (field) {
+      case KEY:
+        return getKey();
+
+      case LIMIT:
+        return new Integer(getLimit());
+
+      }
+      throw new IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been asigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new IllegalArgumentException();
+      }
+
+      switch (field) {
+      case KEY:
+        return isSetKey();
+      case LIMIT:
+        return isSetLimit();
+      }
+      throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof before_args)
+        return this.equals((before_args)that);
+      return false;
+    }
+
+    public boolean equals(before_args that) {
+      if (that == null)
+        return false;
+
+      boolean this_present_key = true && this.isSetKey();
+      boolean that_present_key = true && that.isSetKey();
+      if (this_present_key || that_present_key) {
+        if (!(this_present_key && that_present_key))
+          return false;
+        if (!this.key.equals(that.key))
+          return false;
+      }
+
+      boolean this_present_limit = true;
+      boolean that_present_limit = true;
+      if (this_present_limit || that_present_limit) {
+        if (!(this_present_limit && that_present_limit))
+          return false;
+        if (this.limit != that.limit)
+          return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      return 0;
+    }
+
+    public int compareTo(before_args other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+      before_args typedOther = (before_args)other;
+
+      lastComparison = Boolean.valueOf(isSetKey()).compareTo(typedOther.isSetKey());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetKey()) {
+        lastComparison = TBaseHelper.compareTo(this.key, typedOther.key);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      lastComparison = Boolean.valueOf(isSetLimit()).compareTo(typedOther.isSetLimit());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetLimit()) {
+        lastComparison = TBaseHelper.compareTo(this.limit, typedOther.limit);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(TProtocol iprot) throws TException {
+      TField field;
+      iprot.readStructBegin();
+      while (true)
+      {
+        field = iprot.readFieldBegin();
+        if (field.type == TType.STOP) { 
+          break;
+        }
+        switch (field.id) {
+          case 1: // KEY
+            if (field.type == TType.STRING) {
+              this.key = iprot.readString();
+            } else { 
+              TProtocolUtil.skip(iprot, field.type);
+            }
+            break;
+          case 2: // LIMIT
+            if (field.type == TType.I32) {
+              this.limit = iprot.readI32();
+              setLimitIsSet(true);
+            } else { 
+              TProtocolUtil.skip(iprot, field.type);
+            }
+            break;
+          default:
+            TProtocolUtil.skip(iprot, field.type);
+        }
+        iprot.readFieldEnd();
+      }
+      iprot.readStructEnd();
+
+      // check for required fields of primitive type, which can't be checked in the validate method
+      validate();
+    }
+
+    public void write(TProtocol oprot) throws TException {
+      validate();
+
+      oprot.writeStructBegin(STRUCT_DESC);
+      if (this.key != null) {
+        oprot.writeFieldBegin(KEY_FIELD_DESC);
+        oprot.writeString(this.key);
+        oprot.writeFieldEnd();
+      }
+      oprot.writeFieldBegin(LIMIT_FIELD_DESC);
+      oprot.writeI32(this.limit);
+      oprot.writeFieldEnd();
+      oprot.writeFieldStop();
+      oprot.writeStructEnd();
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder("before_args(");
+      boolean first = true;
+
+      sb.append("key:");
+      if (this.key == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.key);
+      }
+      first = false;
+      if (!first) sb.append(", ");
+      sb.append("limit:");
+      sb.append(this.limit);
+      first = false;
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws TException {
+      // check for required fields
+    }
+
+  }
+
+  public static class before_result implements TBase<before_result, before_result._Fields>, java.io.Serializable, Cloneable   {
+    private static final TStruct STRUCT_DESC = new TStruct("before_result");
+
+    private static final TField SUCCESS_FIELD_DESC = new TField("success", TType.LIST, (short)0);
+
+    public List<Pair> success;
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements TFieldIdEnum {
+      SUCCESS((short)0, "success");
+
+      private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
+
+      static {
+        for (_Fields field : EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          case 0: // SUCCESS
+            return SUCCESS;
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final String _fieldName;
+
+      _Fields(short thriftId, String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public String getFieldName() {
+        return _fieldName;
+      }
+    }
+
+    // isset id assignments
+
+    public static final Map<_Fields, FieldMetaData> metaDataMap;
+    static {
+      Map<_Fields, FieldMetaData> tmpMap = new EnumMap<_Fields, FieldMetaData>(_Fields.class);
+      tmpMap.put(_Fields.SUCCESS, new FieldMetaData("success", TFieldRequirementType.DEFAULT, 
+          new ListMetaData(TType.LIST, 
+              new StructMetaData(TType.STRUCT, Pair.class))));
+      metaDataMap = Collections.unmodifiableMap(tmpMap);
+      FieldMetaData.addStructMetaDataMap(before_result.class, metaDataMap);
+    }
+
+    public before_result() {
+    }
+
+    public before_result(
+      List<Pair> success)
+    {
+      this();
+      this.success = success;
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public before_result(before_result other) {
+      if (other.isSetSuccess()) {
+        List<Pair> __this__success = new ArrayList<Pair>();
+        for (Pair other_element : other.success) {
+          __this__success.add(new Pair(other_element));
+        }
+        this.success = __this__success;
+      }
+    }
+
+    public before_result deepCopy() {
+      return new before_result(this);
+    }
+
+    @Override
+    public void clear() {
+      this.success = null;
+    }
+
+    public int getSuccessSize() {
+      return (this.success == null) ? 0 : this.success.size();
+    }
+
+    public java.util.Iterator<Pair> getSuccessIterator() {
+      return (this.success == null) ? null : this.success.iterator();
+    }
+
+    public void addToSuccess(Pair elem) {
+      if (this.success == null) {
+        this.success = new ArrayList<Pair>();
+      }
+      this.success.add(elem);
+    }
+
+    public List<Pair> getSuccess() {
+      return this.success;
+    }
+
+    public before_result setSuccess(List<Pair> success) {
+      this.success = success;
+      return this;
+    }
+
+    public void unsetSuccess() {
+      this.success = null;
+    }
+
+    /** Returns true if field success is set (has been asigned a value) and false otherwise */
+    public boolean isSetSuccess() {
+      return this.success != null;
+    }
+
+    public void setSuccessIsSet(boolean value) {
+      if (!value) {
+        this.success = null;
+      }
+    }
+
+    public void setFieldValue(_Fields field, Object value) {
+      switch (field) {
+      case SUCCESS:
+        if (value == null) {
+          unsetSuccess();
+        } else {
+          setSuccess((List<Pair>)value);
+        }
+        break;
+
+      }
+    }
+
+    public Object getFieldValue(_Fields field) {
+      switch (field) {
+      case SUCCESS:
+        return getSuccess();
+
+      }
+      throw new IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been asigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new IllegalArgumentException();
+      }
+
+      switch (field) {
+      case SUCCESS:
+        return isSetSuccess();
+      }
+      throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof before_result)
+        return this.equals((before_result)that);
+      return false;
+    }
+
+    public boolean equals(before_result that) {
+      if (that == null)
+        return false;
+
+      boolean this_present_success = true && this.isSetSuccess();
+      boolean that_present_success = true && that.isSetSuccess();
+      if (this_present_success || that_present_success) {
+        if (!(this_present_success && that_present_success))
+          return false;
+        if (!this.success.equals(that.success))
+          return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      return 0;
+    }
+
+    public int compareTo(before_result other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+      before_result typedOther = (before_result)other;
+
+      lastComparison = Boolean.valueOf(isSetSuccess()).compareTo(typedOther.isSetSuccess());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetSuccess()) {
+        lastComparison = TBaseHelper.compareTo(this.success, typedOther.success);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(TProtocol iprot) throws TException {
+      TField field;
+      iprot.readStructBegin();
+      while (true)
+      {
+        field = iprot.readFieldBegin();
+        if (field.type == TType.STOP) { 
+          break;
+        }
+        switch (field.id) {
+          case 0: // SUCCESS
+            if (field.type == TType.LIST) {
+              {
+                TList _list16 = iprot.readListBegin();
+                this.success = new ArrayList<Pair>(_list16.size);
+                for (int _i17 = 0; _i17 < _list16.size; ++_i17)
+                {
+                  Pair _elem18;
+                  _elem18 = new Pair();
+                  _elem18.read(iprot);
+                  this.success.add(_elem18);
+                }
+                iprot.readListEnd();
+              }
+            } else { 
+              TProtocolUtil.skip(iprot, field.type);
+            }
+            break;
+          default:
+            TProtocolUtil.skip(iprot, field.type);
+        }
+        iprot.readFieldEnd();
+      }
+      iprot.readStructEnd();
+
+      // check for required fields of primitive type, which can't be checked in the validate method
+      validate();
+    }
+
+    public void write(TProtocol oprot) throws TException {
+      oprot.writeStructBegin(STRUCT_DESC);
+
+      if (this.isSetSuccess()) {
+        oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
+        {
+          oprot.writeListBegin(new TList(TType.STRUCT, this.success.size()));
+          for (Pair _iter19 : this.success)
+          {
+            _iter19.write(oprot);
+          }
+          oprot.writeListEnd();
+        }
+        oprot.writeFieldEnd();
+      }
+      oprot.writeFieldStop();
+      oprot.writeStructEnd();
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder("before_result(");
+      boolean first = true;
+
+      sb.append("success:");
+      if (this.success == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.success);
+      }
+      first = false;
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws TException {
+      // check for required fields
+    }
+
+  }
+
+  public static class after_args implements TBase<after_args, after_args._Fields>, java.io.Serializable, Cloneable   {
+    private static final TStruct STRUCT_DESC = new TStruct("after_args");
+
+    private static final TField KEY_FIELD_DESC = new TField("key", TType.STRING, (short)1);
+    private static final TField LIMIT_FIELD_DESC = new TField("limit", TType.I32, (short)2);
+
+    public String key;
+    public int limit;
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements TFieldIdEnum {
+      KEY((short)1, "key"),
+      LIMIT((short)2, "limit");
+
+      private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
+
+      static {
+        for (_Fields field : EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          case 1: // KEY
+            return KEY;
+          case 2: // LIMIT
+            return LIMIT;
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final String _fieldName;
+
+      _Fields(short thriftId, String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public String getFieldName() {
+        return _fieldName;
+      }
+    }
+
+    // isset id assignments
+    private static final int __LIMIT_ISSET_ID = 0;
+    private BitSet __isset_bit_vector = new BitSet(1);
+
+    public static final Map<_Fields, FieldMetaData> metaDataMap;
+    static {
+      Map<_Fields, FieldMetaData> tmpMap = new EnumMap<_Fields, FieldMetaData>(_Fields.class);
+      tmpMap.put(_Fields.KEY, new FieldMetaData("key", TFieldRequirementType.DEFAULT, 
+          new FieldValueMetaData(TType.STRING)));
+      tmpMap.put(_Fields.LIMIT, new FieldMetaData("limit", TFieldRequirementType.DEFAULT, 
+          new FieldValueMetaData(TType.I32)));
+      metaDataMap = Collections.unmodifiableMap(tmpMap);
+      FieldMetaData.addStructMetaDataMap(after_args.class, metaDataMap);
+    }
+
+    public after_args() {
+    }
+
+    public after_args(
+      String key,
+      int limit)
+    {
+      this();
+      this.key = key;
+      this.limit = limit;
+      setLimitIsSet(true);
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public after_args(after_args other) {
+      __isset_bit_vector.clear();
+      __isset_bit_vector.or(other.__isset_bit_vector);
+      if (other.isSetKey()) {
+        this.key = other.key;
+      }
+      this.limit = other.limit;
+    }
+
+    public after_args deepCopy() {
+      return new after_args(this);
+    }
+
+    @Override
+    public void clear() {
+      this.key = null;
+      setLimitIsSet(false);
+      this.limit = 0;
+    }
+
+    public String getKey() {
+      return this.key;
+    }
+
+    public after_args setKey(String key) {
+      this.key = key;
+      return this;
+    }
+
+    public void unsetKey() {
+      this.key = null;
+    }
+
+    /** Returns true if field key is set (has been asigned a value) and false otherwise */
+    public boolean isSetKey() {
+      return this.key != null;
+    }
+
+    public void setKeyIsSet(boolean value) {
+      if (!value) {
+        this.key = null;
+      }
+    }
+
+    public int getLimit() {
+      return this.limit;
+    }
+
+    public after_args setLimit(int limit) {
+      this.limit = limit;
+      setLimitIsSet(true);
+      return this;
+    }
+
+    public void unsetLimit() {
+      __isset_bit_vector.clear(__LIMIT_ISSET_ID);
+    }
+
+    /** Returns true if field limit is set (has been asigned a value) and false otherwise */
+    public boolean isSetLimit() {
+      return __isset_bit_vector.get(__LIMIT_ISSET_ID);
+    }
+
+    public void setLimitIsSet(boolean value) {
+      __isset_bit_vector.set(__LIMIT_ISSET_ID, value);
+    }
+
+    public void setFieldValue(_Fields field, Object value) {
+      switch (field) {
+      case KEY:
+        if (value == null) {
+          unsetKey();
+        } else {
+          setKey((String)value);
+        }
+        break;
+
+      case LIMIT:
+        if (value == null) {
+          unsetLimit();
+        } else {
+          setLimit((Integer)value);
+        }
+        break;
+
+      }
+    }
+
+    public Object getFieldValue(_Fields field) {
+      switch (field) {
+      case KEY:
+        return getKey();
+
+      case LIMIT:
+        return new Integer(getLimit());
+
+      }
+      throw new IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been asigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new IllegalArgumentException();
+      }
+
+      switch (field) {
+      case KEY:
+        return isSetKey();
+      case LIMIT:
+        return isSetLimit();
+      }
+      throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof after_args)
+        return this.equals((after_args)that);
+      return false;
+    }
+
+    public boolean equals(after_args that) {
+      if (that == null)
+        return false;
+
+      boolean this_present_key = true && this.isSetKey();
+      boolean that_present_key = true && that.isSetKey();
+      if (this_present_key || that_present_key) {
+        if (!(this_present_key && that_present_key))
+          return false;
+        if (!this.key.equals(that.key))
+          return false;
+      }
+
+      boolean this_present_limit = true;
+      boolean that_present_limit = true;
+      if (this_present_limit || that_present_limit) {
+        if (!(this_present_limit && that_present_limit))
+          return false;
+        if (this.limit != that.limit)
+          return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      return 0;
+    }
+
+    public int compareTo(after_args other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+      after_args typedOther = (after_args)other;
+
+      lastComparison = Boolean.valueOf(isSetKey()).compareTo(typedOther.isSetKey());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetKey()) {
+        lastComparison = TBaseHelper.compareTo(this.key, typedOther.key);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      lastComparison = Boolean.valueOf(isSetLimit()).compareTo(typedOther.isSetLimit());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetLimit()) {
+        lastComparison = TBaseHelper.compareTo(this.limit, typedOther.limit);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(TProtocol iprot) throws TException {
+      TField field;
+      iprot.readStructBegin();
+      while (true)
+      {
+        field = iprot.readFieldBegin();
+        if (field.type == TType.STOP) { 
+          break;
+        }
+        switch (field.id) {
+          case 1: // KEY
+            if (field.type == TType.STRING) {
+              this.key = iprot.readString();
+            } else { 
+              TProtocolUtil.skip(iprot, field.type);
+            }
+            break;
+          case 2: // LIMIT
+            if (field.type == TType.I32) {
+              this.limit = iprot.readI32();
+              setLimitIsSet(true);
+            } else { 
+              TProtocolUtil.skip(iprot, field.type);
+            }
+            break;
+          default:
+            TProtocolUtil.skip(iprot, field.type);
+        }
+        iprot.readFieldEnd();
+      }
+      iprot.readStructEnd();
+
+      // check for required fields of primitive type, which can't be checked in the validate method
+      validate();
+    }
+
+    public void write(TProtocol oprot) throws TException {
+      validate();
+
+      oprot.writeStructBegin(STRUCT_DESC);
+      if (this.key != null) {
+        oprot.writeFieldBegin(KEY_FIELD_DESC);
+        oprot.writeString(this.key);
+        oprot.writeFieldEnd();
+      }
+      oprot.writeFieldBegin(LIMIT_FIELD_DESC);
+      oprot.writeI32(this.limit);
+      oprot.writeFieldEnd();
+      oprot.writeFieldStop();
+      oprot.writeStructEnd();
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder("after_args(");
+      boolean first = true;
+
+      sb.append("key:");
+      if (this.key == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.key);
+      }
+      first = false;
+      if (!first) sb.append(", ");
+      sb.append("limit:");
+      sb.append(this.limit);
+      first = false;
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws TException {
+      // check for required fields
+    }
+
+  }
+
+  public static class after_result implements TBase<after_result, after_result._Fields>, java.io.Serializable, Cloneable   {
+    private static final TStruct STRUCT_DESC = new TStruct("after_result");
+
+    private static final TField SUCCESS_FIELD_DESC = new TField("success", TType.LIST, (short)0);
+
+    public List<Pair> success;
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements TFieldIdEnum {
+      SUCCESS((short)0, "success");
+
+      private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
+
+      static {
+        for (_Fields field : EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          case 0: // SUCCESS
+            return SUCCESS;
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final String _fieldName;
+
+      _Fields(short thriftId, String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public String getFieldName() {
+        return _fieldName;
+      }
+    }
+
+    // isset id assignments
+
+    public static final Map<_Fields, FieldMetaData> metaDataMap;
+    static {
+      Map<_Fields, FieldMetaData> tmpMap = new EnumMap<_Fields, FieldMetaData>(_Fields.class);
+      tmpMap.put(_Fields.SUCCESS, new FieldMetaData("success", TFieldRequirementType.DEFAULT, 
+          new ListMetaData(TType.LIST, 
+              new StructMetaData(TType.STRUCT, Pair.class))));
+      metaDataMap = Collections.unmodifiableMap(tmpMap);
+      FieldMetaData.addStructMetaDataMap(after_result.class, metaDataMap);
+    }
+
+    public after_result() {
+    }
+
+    public after_result(
+      List<Pair> success)
+    {
+      this();
+      this.success = success;
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public after_result(after_result other) {
+      if (other.isSetSuccess()) {
+        List<Pair> __this__success = new ArrayList<Pair>();
+        for (Pair other_element : other.success) {
+          __this__success.add(new Pair(other_element));
+        }
+        this.success = __this__success;
+      }
+    }
+
+    public after_result deepCopy() {
+      return new after_result(this);
+    }
+
+    @Override
+    public void clear() {
+      this.success = null;
+    }
+
+    public int getSuccessSize() {
+      return (this.success == null) ? 0 : this.success.size();
+    }
+
+    public java.util.Iterator<Pair> getSuccessIterator() {
+      return (this.success == null) ? null : this.success.iterator();
+    }
+
+    public void addToSuccess(Pair elem) {
+      if (this.success == null) {
+        this.success = new ArrayList<Pair>();
+      }
+      this.success.add(elem);
+    }
+
+    public List<Pair> getSuccess() {
+      return this.success;
+    }
+
+    public after_result setSuccess(List<Pair> success) {
+      this.success = success;
+      return this;
+    }
+
+    public void unsetSuccess() {
+      this.success = null;
+    }
+
+    /** Returns true if field success is set (has been asigned a value) and false otherwise */
+    public boolean isSetSuccess() {
+      return this.success != null;
+    }
+
+    public void setSuccessIsSet(boolean value) {
+      if (!value) {
+        this.success = null;
+      }
+    }
+
+    public void setFieldValue(_Fields field, Object value) {
+      switch (field) {
+      case SUCCESS:
+        if (value == null) {
+          unsetSuccess();
+        } else {
+          setSuccess((List<Pair>)value);
+        }
+        break;
+
+      }
+    }
+
+    public Object getFieldValue(_Fields field) {
+      switch (field) {
+      case SUCCESS:
+        return getSuccess();
+
+      }
+      throw new IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been asigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new IllegalArgumentException();
+      }
+
+      switch (field) {
+      case SUCCESS:
+        return isSetSuccess();
+      }
+      throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof after_result)
+        return this.equals((after_result)that);
+      return false;
+    }
+
+    public boolean equals(after_result that) {
+      if (that == null)
+        return false;
+
+      boolean this_present_success = true && this.isSetSuccess();
+      boolean that_present_success = true && that.isSetSuccess();
+      if (this_present_success || that_present_success) {
+        if (!(this_present_success && that_present_success))
+          return false;
+        if (!this.success.equals(that.success))
+          return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      return 0;
+    }
+
+    public int compareTo(after_result other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+      after_result typedOther = (after_result)other;
+
+      lastComparison = Boolean.valueOf(isSetSuccess()).compareTo(typedOther.isSetSuccess());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetSuccess()) {
+        lastComparison = TBaseHelper.compareTo(this.success, typedOther.success);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(TProtocol iprot) throws TException {
+      TField field;
+      iprot.readStructBegin();
+      while (true)
+      {
+        field = iprot.readFieldBegin();
+        if (field.type == TType.STOP) { 
+          break;
+        }
+        switch (field.id) {
+          case 0: // SUCCESS
+            if (field.type == TType.LIST) {
+              {
+                TList _list20 = iprot.readListBegin();
+                this.success = new ArrayList<Pair>(_list20.size);
+                for (int _i21 = 0; _i21 < _list20.size; ++_i21)
+                {
+                  Pair _elem22;
+                  _elem22 = new Pair();
+                  _elem22.read(iprot);
+                  this.success.add(_elem22);
+                }
+                iprot.readListEnd();
+              }
+            } else { 
+              TProtocolUtil.skip(iprot, field.type);
+            }
+            break;
+          default:
+            TProtocolUtil.skip(iprot, field.type);
+        }
+        iprot.readFieldEnd();
+      }
+      iprot.readStructEnd();
+
+      // check for required fields of primitive type, which can't be checked in the validate method
+      validate();
+    }
+
+    public void write(TProtocol oprot) throws TException {
+      oprot.writeStructBegin(STRUCT_DESC);
+
+      if (this.isSetSuccess()) {
+        oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
+        {
+          oprot.writeListBegin(new TList(TType.STRUCT, this.success.size()));
+          for (Pair _iter23 : this.success)
+          {
+            _iter23.write(oprot);
+          }
+          oprot.writeListEnd();
+        }
+        oprot.writeFieldEnd();
+      }
+      oprot.writeFieldStop();
+      oprot.writeStructEnd();
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder("after_result(");
       boolean first = true;
 
       sb.append("success:");

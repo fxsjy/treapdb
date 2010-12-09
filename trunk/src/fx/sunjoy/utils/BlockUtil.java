@@ -302,10 +302,6 @@ public class BlockUtil<K extends Comparable<K>,V extends Serializable> {
 		}
 		
 		ByteBuffer block = ByteUtil.dumps(node,blockSize);
-		if(block.limit()>blockSize){
-			throw new Exception("key is too long(键太长了,可以TreapDB启动时调大索引块的size)");
-		}
-		
 		iocounter++;
 		
 		putBytes(indexFile,HEADER_SIZE+(long)pos*blockSize,block);

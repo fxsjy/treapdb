@@ -240,4 +240,16 @@ public class MemTreap<K extends Comparable<K>,V> implements ITreap<K, V>  {
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+	@Override
+	public Map<K, V> before(K key, int limit) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Map<K, V> after(K key, int limit) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

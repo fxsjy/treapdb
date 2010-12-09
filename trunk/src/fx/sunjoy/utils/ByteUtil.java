@@ -128,6 +128,9 @@ public class ByteUtil {
 		ByteBuffer buf = ByteBuffer.allocate(maxBlockSize);
 		if(node.key instanceof FastString){
 			byte[] bytes = ((FastString)node.key).bytes;
+			if(bytes.length+DiskTreapNode.STRING_KEY_OVER_HEAD>maxBlockSize){
+				throw new RuntimeException("key is too long(键太长了,可以TreapDB启动时调大索引块的size)");
+			}
 			buf.put((byte)13);
 			buf.putInt(bytes.length); //string's length
 			buf.put(bytes);

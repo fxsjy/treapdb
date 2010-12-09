@@ -21,7 +21,7 @@ public class RangeCommand extends AbstractCommand{
 		for(Entry<FastString,byte[]> e :result.entrySet()){
 			byte[] realvalue = new byte[e.getValue().length - 4] ;
 			System.arraycopy(e.getValue(), 4, realvalue, 0, realvalue.length) ;
-			os.write((e.getKey()+",\t"+realvalue+"\r\n").getBytes());
+			os.write((e.getKey()+",\t"+new String(realvalue)+"\r\n").getBytes());
 		}
 		os.write(("END\r\n").getBytes());
 		

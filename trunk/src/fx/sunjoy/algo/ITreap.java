@@ -19,7 +19,14 @@ public interface ITreap<K extends Comparable<K>, V> {
 	//É¾³ı
 	public abstract boolean delete(K key);
 
+	//Ç°×º
 	public abstract Map<K,V> prefix(K prefixString,int limit);
+	
+	//<=keyµÄ
+	public abstract Map<K,V> before(K key,int limit);
+	
+	//>=keyµÄ
+	public abstract Map<K,V> after(K key,int limit);
 	
 	public Map<K,V> kmin(int k);
 	

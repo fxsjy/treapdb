@@ -16,7 +16,9 @@ import fx.sunjoy.server.cmd.GetCommand;
 import fx.sunjoy.server.cmd.KMaxCommand;
 import fx.sunjoy.server.cmd.KMinCommand;
 import fx.sunjoy.server.cmd.LenCommand;
+import fx.sunjoy.server.cmd.AfterCommand;
 import fx.sunjoy.server.cmd.PrefixCommand;
+import fx.sunjoy.server.cmd.BeforeCommand;
 import fx.sunjoy.server.cmd.RangeCommand;
 import fx.sunjoy.server.cmd.SetCommand;
 import fx.sunjoy.utils.FastString;
@@ -62,6 +64,10 @@ public class TreapDBTextProtocolServer {
 							new LenCommand().execute(diskTreap,msg.command,msg.body, os);
 						}else if(msg.command.startsWith("delete ")){
 							new DelCommand().execute(diskTreap,msg.command,msg.body, os);
+						}else if(msg.command.startsWith("before ")){
+							new BeforeCommand().execute(diskTreap,msg.command,msg.body, os);
+						}else if(msg.command.startsWith("after ")){
+							new AfterCommand().execute(diskTreap,msg.command,msg.body, os);
 						}else{
 							os.write("ERROR\r\n".getBytes());
 						}

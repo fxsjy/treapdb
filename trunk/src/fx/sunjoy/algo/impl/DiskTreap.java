@@ -475,4 +475,74 @@ public class DiskTreap<K extends Comparable<K>,V extends Serializable> implement
 		return -1;
 	}
 
+	@Override
+	public Map<K, V> before(K key, int limit) {
+		lock.readLock().lock();
+		try {
+			Map<K,V> results = new TreeMap<K,V>();
+			DiskTreapHeader header = this.blockUtil.readHeader();
+			prevSearch(header.rootNo,key,results,limit);
+			return results;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}finally{
+			lock.readLock().unlock();
+		}
+	}
+
+	private void prevSearch(int startNode, K key, Map<K, V> results, int limit) throws Exception {
+		if(startNode==-1)return ;
+		if(results.size()>=limit)return;
+		DiskTreapNode<K, V> cur = this.blockUtil.readNode(startNode, true);
+		int cp = cur.key.compareTo(key);
+		if(cp<0){
+			prevSearch(cur.rNo, key, results, limit);
+			if(results.size()>=limit)return;
+			results.put(cur.key, cur.value);
+			prevSearch(cur.lNo, key, results, limit);
+		}
+		else if(cp==0){
+			if(results.size()>=limit)return;
+			results.put(cur.key, cur.value);
+			prevSearch(cur.lNo, key, results, limit);
+		}else{
+			prevSearch(cur.lNo, key, results, limit);
+		}
+	}
+
+	@Override
+	public Map<K, V> after(K key, int limit) {
+		lock.readLock().lock();
+		try {
+			Map<K,V> results = new TreeMap<K,V>();
+			DiskTreapHeader header = this.blockUtil.readHeader();
+			nextSearch(header.rootNo,key,results,limit);
+			return results;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}finally{
+			lock.readLock().unlock();
+		}
+	}
+
+	private void nextSearch(int startNode, K key, Map<K, V> results, int limit) throws Exception {
+		if(startNode==-1)return ;
+		if(results.size()>=limit)return;
+		DiskTreapNode<K, V> cur = this.blockUtil.readNode(startNode, true);
+		int cp = cur.key.compareTo(key);
+		if(cp>0){
+			nextSearch(cur.lNo, key, results, limit);
+			if(results.size()>=limit)return;
+			results.put(cur.key, cur.value);
+			nextSearch(cur.rNo, key, results, limit);
+		}
+		else if(cp==0){
+			if(results.size()>=limit)return;
+			results.put(cur.key, cur.value);
+			nextSearch(cur.rNo, key, results, limit);
+		}else{
+			nextSearch(cur.rNo, key, results, limit);
+		}
+	}
+
 }

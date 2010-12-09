@@ -34,7 +34,8 @@ public class TestFastStringKey {
 			}
 		}
 		for(FastString k: keys){
-			System.out.println(treap.get(k));
+			byte[] v = (byte[])treap.get(k);
+			System.out.println(new String(v));
 		}
 		System.out.println(System.currentTimeMillis()-t1);
 	}

@@ -4,9 +4,11 @@ import java.io.Serializable;
 
 @SuppressWarnings("serial")
 /**
- * 序列化后不能超过440个字节
+ * 
  */
 public class DiskTreapNode<K extends Comparable<K>,V extends Serializable> implements Serializable{
+	
+	public static final int STRING_KEY_OVER_HEAD = 38;
 	
 	public byte keyType; //0 string ,1 int, 2 float
 	public K key;//max string length 250

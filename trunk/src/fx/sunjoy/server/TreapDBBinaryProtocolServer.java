@@ -1,7 +1,8 @@
 package fx.sunjoy.server;
 
 import java.nio.ByteBuffer;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -13,6 +14,7 @@ import org.apache.thrift.transport.TServerSocket;
 import org.apache.thrift.transport.TTransportException;
 
 import fx.sunjoy.algo.impl.DiskTreap;
+import fx.sunjoy.server.gen.Pair;
 import fx.sunjoy.server.gen.TreapDBService;
 import fx.sunjoy.server.gen.TreapDBService.Iface;
 import fx.sunjoy.utils.FastString;
@@ -64,18 +66,19 @@ public class TreapDBBinaryProtocolServer implements Iface{
 		//return ByteBuffer.wrap(result);
 	}
 	
-	private Map<String, ByteBuffer> byteArraytoBuffer(Map<FastString, byte[]> r1) {
-		Map<String,ByteBuffer> r2 = new HashMap<String, ByteBuffer>();
+	private List<Pair> byteArraytoBuffer(Map<FastString, byte[]> r1) {
+		List<Pair> r2 = new ArrayList<Pair>();
 		for(Entry<FastString,byte[]> e: r1.entrySet()){
 			byte[] realvalue = new byte[e.getValue().length - 4] ;
 			System.arraycopy(e.getValue(), 4, realvalue, 0, realvalue.length) ;
-			r2.put(new String(e.getKey().bytes), ByteBuffer.wrap(realvalue) );
+			Pair pair = new Pair(new String(e.getKey().bytes), ByteBuffer.wrap(realvalue));
+			r2.add( pair);
 		}
 		return r2;
 	}
 
 	@Override
-	public Map<String, ByteBuffer> prefix(String prefixStr, int limit)
+	public List<Pair> prefix(String prefixStr, int limit)
 			throws TException {
 		Map<FastString,byte[]> result = treap.prefix(new FastString(prefixStr), limit);
 		return byteArraytoBuffer(result);
@@ -83,19 +86,19 @@ public class TreapDBBinaryProtocolServer implements Iface{
 
 
 	@Override
-	public Map<String, ByteBuffer> kmax(int k) throws TException {
+	public List<Pair> kmax(int k) throws TException {
 		Map<FastString,byte[]> result = treap.kmax(k);
 		return byteArraytoBuffer(result);
 	}
 
 	@Override
-	public Map<String, ByteBuffer> kmin(int k) throws TException {
+	public List<Pair> kmin(int k) throws TException {
 		Map<FastString,byte[]> result = treap.kmin(k);
 		return byteArraytoBuffer(result);
 	}
 
 	@Override
-	public Map<String, ByteBuffer> range(String kStart, String kEnd, int limit)
+	public List<Pair> range(String kStart, String kEnd, int limit)
 			throws TException {
 		Map<FastString,byte[]> result = treap.range(new FastString(kStart), new FastString(kEnd), limit);
 		return byteArraytoBuffer(result);
@@ -103,14 +106,26 @@ public class TreapDBBinaryProtocolServer implements Iface{
 
 	@Override
 	public boolean remove(String key) throws TException {
-		// TODO Auto-generated method stub
 		return treap.delete(new FastString(key));
 	}
 
 	@Override
 	public int length() throws TException {
-		// TODO Auto-generated method stub
 		return treap.length();
+	}
+
+	@Override
+	public List<Pair> before(String key, int limit)
+			throws TException {
+		Map<FastString,byte[]> result = treap.before(new FastString(key), limit);
+		return byteArraytoBuffer(result);
+	}
+
+	@Override
+	public List<Pair> after(String key, int limit)
+			throws TException {
+		Map<FastString,byte[]> result = treap.after(new FastString(key), limit);
+		return byteArraytoBuffer(result);
 	}
 	
 	

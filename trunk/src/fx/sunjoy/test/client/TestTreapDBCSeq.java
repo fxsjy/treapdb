@@ -1,11 +1,11 @@
 package fx.sunjoy.test.client;
 
 import java.nio.ByteBuffer;
-import java.util.Map;
-import java.util.Map.Entry;
+import java.util.List;
 
 import fx.sunjoy.client.TreapDBClient;
 import fx.sunjoy.client.TreapDBClientFactory;
+import fx.sunjoy.server.gen.Pair;
 
 public class TestTreapDBCSeq {
 	public static void main(String[] args) throws Exception {
@@ -27,9 +27,9 @@ public class TestTreapDBCSeq {
 			if(i%100==0)
 				System.out.println("geting:"+i);
 		}
-		Map<String,ByteBuffer> results = client.prefix("thing", 100);
-		for(Entry<String, ByteBuffer> e: results.entrySet()){
-			System.out.println(e.getKey()+":"+new String(e.getValue().array()));
+		List<Pair> results = client.prefix("thing", 100);
+		for(Pair e: results){
+			System.out.println(e.getKey()+":"+new String(e.getValue()));
 		}
 		System.out.println(System.currentTimeMillis()-t1);
 		System.out.println("before deleting:"+client.length());

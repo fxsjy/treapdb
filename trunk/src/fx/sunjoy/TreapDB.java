@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 
 import fx.sunjoy.algo.impl.DiskTreap;
+import fx.sunjoy.algo.impl.DiskTreapNode;
 import fx.sunjoy.server.TreapDBBinaryProtocolServer;
 import fx.sunjoy.server.TreapDBTextProtocolServer;
 import fx.sunjoy.utils.ConfigUtil;
@@ -84,7 +85,7 @@ public class TreapDB {
 		System.out.println("Listening memcached protocol port  : "+textport);
 		System.out.println("Listening thrift protocol port  : "+thriftport);
 		System.out.println("Index File Path :"+index_file_path);
-		System.out.println("Max Key Size:"+(index_block_size-38)+" Bytes");
+		System.out.println("Max Key Size:"+(index_block_size-DiskTreapNode.STRING_KEY_OVER_HEAD)+" Bytes");
 		System.out.println("Index Block Size:"+index_block_size+" Bytes");
 		System.out.println("Memory Map Size :"+mmap_size+" Bytes");
 		System.out.println("Total Record Amount:"+diskTreap.length());
