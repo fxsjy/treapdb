@@ -510,6 +510,7 @@ public class DiskTreap<K extends Comparable<K>,V extends Serializable> implement
 		}
 		else if(cp==0){
 			if(results.size()>=limit)return;
+			this.blockUtil.filleNodeValue(cur);
 			results.put(cur.key, cur.value);
 			prevSearch(cur.lNo, key, results, limit);
 		}else{
@@ -546,6 +547,7 @@ public class DiskTreap<K extends Comparable<K>,V extends Serializable> implement
 		}
 		else if(cp==0){
 			if(results.size()>=limit)return;
+			this.blockUtil.filleNodeValue(cur);
 			results.put(cur.key, cur.value);
 			nextSearch(cur.rNo, key, results, limit);
 		}else{

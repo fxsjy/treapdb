@@ -19,5 +19,14 @@ public class TestLocationSearch {
 		
 		System.out.println(treap.before(new FastString("4"), 5));
 		System.out.println(treap.after(new FastString("4"), 5));
+		
+		DiskTreap<Integer, Serializable> treap2 = new DiskTreap<Integer,Serializable>(64,new File("c:/test/location2"),64<<20);
+		for(int i=1;i<=10;i++){
+			treap2.put(i, i);
+		}
+		
+		System.out.println(treap2.before(4, 5));
+		System.out.println(treap2.after(4, 5));
+		
 	}
 }
