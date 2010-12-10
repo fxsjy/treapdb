@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 
 import fx.sunjoy.algo.impl.DiskTreap;
+import fx.sunjoy.repl.ReplSlave;
 import fx.sunjoy.algo.impl.DiskTreapNode;
 import fx.sunjoy.server.TreapDBBinaryProtocolServer;
 import fx.sunjoy.server.TreapDBTextProtocolServer;
@@ -89,6 +90,20 @@ public class TreapDB {
 		System.out.println("Index Block Size:"+index_block_size+" Bytes");
 		System.out.println("Memory Map Size :"+mmap_size+" Bytes");
 		System.out.println("Total Record Amount:"+diskTreap.length());
+		
+		/***********************master-slave************************************/
+		String replicationRole = params.getReplicationRole() ;
+		if(replicationRole != null && replicationRole.equalsIgnoreCase("Slave"))
+		{
+			Textserver.setReplicationRole("Slave") ;
+			ThriftServer.setReplicationRole("Slave") ;
+			
+			String masterSource = params.getMasterSource() ;
+			ReplSlave slave = new ReplSlave(masterSource, diskTreap) ;
+			slave.start() ;
+		}
+		/***********************master-slave************************************/
+		
 		try {
 			textServerThread.join();
 			thriftServerThread.join() ;

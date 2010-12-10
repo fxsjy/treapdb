@@ -2,13 +2,17 @@
 <TreapDB>
 	<Params>
 		<Port>
-			<Memcache>11811</Memcache>
-			<Thrift>11812</Thrift>
+			<Memcache>11911</Memcache>
+			<Thrift>11912</Thrift>
 		</Port>
 		<Index>
-			<FilePath>/var/log/treapdb/dbhere</FilePath>
+			<FilePath>D:\test\nnn</FilePath>
 			<BlockSize>64</BlockSize>
 		</Index>
 		<MMapSize>128</MMapSize>
+		<Replication>
+			<Role>Slave</Role>
+			<Source>10.61.1.134:11811</Source>
+		</Replication>
 	</Params>
 </TreapDB>

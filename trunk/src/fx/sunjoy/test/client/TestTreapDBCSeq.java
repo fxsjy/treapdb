@@ -16,7 +16,7 @@ public class TestTreapDBCSeq {
 		if(args.length>1){count = Integer.parseInt(args[1]);};
 		for(int i=0;i<100;i++){buf.put((byte)'x');};
 		buf.flip();
-		TreapDBClient client = TreapDBClientFactory.getClient(host, 11811);
+		TreapDBClient client = TreapDBClientFactory.getClient(host, 11812);
 		long t1 = System.currentTimeMillis();
 		System.out.println("will put "+count+" keys.");
 		for(int i=0;i<count;i++){

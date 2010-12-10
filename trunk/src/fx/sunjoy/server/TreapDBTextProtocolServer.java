@@ -11,17 +11,19 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import fx.sunjoy.algo.impl.DiskTreap;
+import fx.sunjoy.server.cmd.AfterCommand;
+import fx.sunjoy.server.cmd.BeforeCommand;
 import fx.sunjoy.server.cmd.DelCommand;
 import fx.sunjoy.server.cmd.GetCommand;
 import fx.sunjoy.server.cmd.KMaxCommand;
 import fx.sunjoy.server.cmd.KMinCommand;
 import fx.sunjoy.server.cmd.LenCommand;
-import fx.sunjoy.server.cmd.AfterCommand;
 import fx.sunjoy.server.cmd.PrefixCommand;
-import fx.sunjoy.server.cmd.BeforeCommand;
 import fx.sunjoy.server.cmd.RangeCommand;
 import fx.sunjoy.server.cmd.SetCommand;
+import fx.sunjoy.server.cmd.SyncCommand;
 import fx.sunjoy.utils.FastString;
+
 
 class Msg{
 	String command;
@@ -30,7 +32,11 @@ class Msg{
 
 public class TreapDBTextProtocolServer {
 	
+
+	private String replicationRole = null ;
+	
 	private DiskTreap<FastString, byte[]> diskTreap;
+
 	ServerSocket serverSocket;
 	int port;
 	private ExecutorService pool = Executors.newCachedThreadPool();
@@ -51,7 +57,15 @@ public class TreapDBTextProtocolServer {
 						if(msg.command.startsWith("get ")){
 							new GetCommand().execute(diskTreap,msg.command,msg.body, os);
 						}else if(msg.command.startsWith("set ")){
-							new SetCommand().execute(diskTreap,msg.command,msg.body, os);
+							if(replicationRole != null && replicationRole.equalsIgnoreCase("Slave"))
+							{
+								os.write("Slave cloud not do set operation!\r\n".getBytes()) ;
+								os.write("END\r\n".getBytes()) ;
+							}
+							else
+							{
+								new SetCommand().execute(diskTreap,msg.command,msg.body, os);
+							}
 						}else if(msg.command.startsWith("prefix ")){
 							new PrefixCommand().execute(diskTreap,msg.command,msg.body, os);
 						}else if(msg.command.startsWith("range ")){
@@ -63,7 +77,17 @@ public class TreapDBTextProtocolServer {
 						}else if(msg.command.startsWith("len")){
 							new LenCommand().execute(diskTreap,msg.command,msg.body, os);
 						}else if(msg.command.startsWith("delete ")){
-							new DelCommand().execute(diskTreap,msg.command,msg.body, os);
+							if(replicationRole != null && replicationRole.equals("Slave"))
+							{
+								os.write("Slave cloud not do delete operation!\r\n".getBytes()) ;
+								os.write("END\r\n".getBytes()) ;
+							}
+							else
+							{
+								new DelCommand().execute(diskTreap,msg.command,msg.body, os);
+							}
+						}else if(msg.command.startsWith("sync ")){
+							new SyncCommand().execute(diskTreap,msg.command,msg.body, os) ;
 						}else if(msg.command.startsWith("before ")){
 							new BeforeCommand().execute(diskTreap,msg.command,msg.body, os);
 						}else if(msg.command.startsWith("after ")){
@@ -109,9 +133,10 @@ public class TreapDBTextProtocolServer {
 			}
 		}
 		msg.command = new String(Arrays.copyOf(content, j));
-		if(msg.command.split(" ").length==5){// not read operation
+		String[] stuff = msg.command.split(" ");
+		if(stuff.length==5){// not read operation
 			int readCount = content.length-(j+4);
-			int shouldReadCount = Integer.parseInt(msg.command.split(" ")[4]);
+			int shouldReadCount = Integer.parseInt(stuff[4]);
 			while(readCount<shouldReadCount){
 				ct = is.read(buf, 0, buf.length);
 				if(ct==-1)break;
@@ -138,6 +163,10 @@ public class TreapDBTextProtocolServer {
 					}
 			);
 		}
+	}
+
+	public void setReplicationRole(String replicationRole) {
+		this.replicationRole = replicationRole;
 	}
 }
 

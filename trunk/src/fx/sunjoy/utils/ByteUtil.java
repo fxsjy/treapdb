@@ -8,6 +8,8 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.zip.CRC32;
 import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
@@ -69,6 +71,135 @@ public class ByteUtil {
 		}
 		return xgetObjectFromBytes(Arrays.copyOfRange(valueBytes,1,valueBytes.length));
 	}
+	
+	/*************************begin master-slave***********************************/
+	
+	public static Map<String, byte[]> parseKeyValue(byte[] key_value) throws Exception
+	{
+		
+		System.out.println(key_value.length) ;
+		ByteBuffer buf = ByteBuffer.wrap(key_value);
+		buf.position(0) ;
+		
+		byte key_length = buf.get() ;
+		byte[] key_content = new byte[key_length] ;
+		buf.get(key_content);
+		String key = new String(key_content) ;
+		
+		Map<String, byte[]> result = new HashMap<String, byte[]>() ;
+		
+		byte valueType = buf.get();
+		if(valueType==BYTEARRAY)
+		{
+			int strLen = buf.getInt();
+			byte[] dest = new byte[strLen];
+			buf.get(dest);
+			//return dest;
+			result.put(key, dest) ;
+		}
+		else if(valueType==ZIPBYTEARRAY)
+		{
+			int strLen = buf.getInt();
+			byte[] dest = new byte[strLen];
+			buf.get(dest);
+			//return unzipBytes(dest);
+			result.put(key, unzipBytes(dest)) ;
+		}
+		
+		else
+		{
+			//return xgetObjectFromBytes(Arrays.copyOfRange(valueBytes,1,valueBytes.length));
+			byte[] dest = Arrays.copyOfRange(key_value,1+ key_length + 1,key_value.length);
+			result.put(key, dest) ;
+		}
+		
+		return result ; 
+		
+	}
+	
+	public static Object loadV_MS(byte[] valueBytes) throws Exception {
+		ByteBuffer buf = ByteBuffer.wrap(valueBytes);
+		
+		byte key_length = buf.get() ;
+		byte[] key_content = new byte[key_length] ;
+		buf.get(key_content);
+		
+		byte valueType = buf.get();
+		if(valueType==BYTEARRAY)
+		{
+			int strLen = buf.getInt();
+			byte[] dest = new byte[strLen];
+			buf.get(dest);
+			return dest;
+		}
+		else if(valueType==ZIPBYTEARRAY)
+		{
+			int strLen = buf.getInt();
+			byte[] dest = new byte[strLen];
+			buf.get(dest);
+			return unzipBytes(dest);
+		}
+		
+		else
+		{
+			//return xgetObjectFromBytes(Arrays.copyOfRange(valueBytes,1,valueBytes.length));
+			return xgetObjectFromBytes(Arrays.copyOfRange(valueBytes,1+ key_length + 1,valueBytes.length));
+		}
+		
+		
+	}
+	
+	@SuppressWarnings({ "rawtypes" })
+	public static byte[] dumpV_MS(Comparable key, Serializable value) throws Exception {
+		
+		byte key_length = (byte)key.toString().getBytes().length ;
+		
+		ByteBuffer buf = null;
+		if(value instanceof byte[])
+		{
+			byte[] bytes = (byte[])value;
+			if(bytes.length < (5<<10)){
+				//buf = ByteBuffer.allocate(bytes.length+5);
+				buf = ByteBuffer.allocate(1+key_length+bytes.length + 5) ;
+				
+				buf.put(key_length) ;  //key的长度
+				buf.put(key.toString().getBytes()) ; //key的内容
+				
+				buf.put(BYTEARRAY);
+				buf.putInt(bytes.length);
+				buf.put(bytes);
+			}else{
+				bytes = zipBytes(bytes);
+				buf = ByteBuffer.allocate(1+key_length + bytes.length+5);
+				
+				buf.put(key_length) ;  //key的长度
+				buf.put(key.toString().getBytes()) ; //key的内容
+				
+				buf.put(ZIPBYTEARRAY);
+				buf.putInt(bytes.length);
+				buf.put(bytes);
+			}
+		}
+		else
+		{
+			byte[] bytes = xgetBytesFromObject(value);
+			buf = ByteBuffer.allocate(1+key_length + bytes.length+1);
+			
+			buf.put(key_length) ;  //key的长度
+			buf.put(key.toString().getBytes()) ; //key的内容
+			
+			buf.put(OBJ);
+			buf.put(bytes);
+		}
+		
+		int size = buf.position();
+		byte[] dest = new byte[size];
+		buf.flip();
+		buf.get(dest);
+		return dest;
+	}
+	
+	/*************************end master-slave***********************************/
 	
 	public static byte[] dumpV(Serializable value) throws Exception{
 		ByteBuffer buf = null;

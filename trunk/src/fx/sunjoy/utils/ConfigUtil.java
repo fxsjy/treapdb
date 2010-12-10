@@ -17,6 +17,8 @@ public class ConfigUtil {
 	private String indexFilePath = null ;
 	private int indexBlockSize = 128 ;
 	private int mmapSize = 64 ;
+	private String ReplicationRole = null ;
+	private String masterSource = null ;
 	
 	public ConfigUtil(String configFilePath)
 	{
@@ -87,11 +89,46 @@ public class ConfigUtil {
 					mmapSize = Integer.valueOf(mmap.item(0).getTextContent().trim()) ;
 				}
 				
+				//获取Replication的信息
+				NodeList replication = doc.getElementsByTagName("Replication") ;
+				if(replication != null && replication.getLength() > 0)
+				{
+					NodeList subParams = replication.item(0).getChildNodes() ;
+					if(subParams != null && subParams.getLength() > 0)
+					{
+						for(int i = 0; i < subParams.getLength(); i++)
+						{
+							String nodeName = subParams.item(i).getNodeName() ;
+							String value = subParams.item(i).getTextContent().trim() ;
+							if(value != null)
+							{
+								if(nodeName.equals("Role"))
+								{
+									ReplicationRole = value ;
+								}
+								else if(nodeName.equals("Source"))
+								{
+									masterSource = value ;
+								}
+							}
+						}
+					}
+				}
+				
 				if(textPort > 0  && thriftPort > 0 &&  indexFilePath != null && 
 						indexBlockSize > 0 && mmapSize > 0)
 				{
 					isValid = true ;
 				}
+				
+				if(ReplicationRole != null && ReplicationRole.equalsIgnoreCase("Slave"))
+				{
+					if(masterSource == null || masterSource.length() == 0)
+					{
+						isValid = false ;
+					}
+				}
+				
 			} 
 			catch (Exception e)
 			{
@@ -129,6 +166,22 @@ public class ConfigUtil {
 
 	public int getMmapSize() {
 		return mmapSize;
+	}
+
+	public String getReplicationRole() {
+		return ReplicationRole;
+	}
+
+	public void setReplicationRole(String replicationRole) {
+		ReplicationRole = replicationRole;
+	}
+
+	public String getMasterSource() {
+		return masterSource;
+	}
+
+	public void setMasterSource(String masterSource) {
+		this.masterSource = masterSource;
 	}
 
 

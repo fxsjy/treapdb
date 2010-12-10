@@ -21,7 +21,12 @@ import fx.sunjoy.utils.FastString;
 
 public class TreapDBBinaryProtocolServer implements Iface{
 	
+
+	private String replicationRole = null ;
+	
+	
 	private final DiskTreap<FastString, byte[]> treap ;
+
 	
 	private final int port ;
 	
@@ -42,6 +47,10 @@ public class TreapDBBinaryProtocolServer implements Iface{
 	@Override
 	public void put(String key, ByteBuffer value) throws TException {
 		
+		if(replicationRole != null && replicationRole.equalsIgnoreCase("Slave"))
+		{
+			return ;
+		}
 		byte[] maskFlags = new byte[]{0,0,0,0} ;
 		byte[] realvalue = value.array() ;
 		byte[] content = new byte[maskFlags.length + realvalue.length] ;
@@ -106,13 +115,27 @@ public class TreapDBBinaryProtocolServer implements Iface{
 
 	@Override
 	public boolean remove(String key) throws TException {
+
+		// TODO Auto-generated method stub
+		if(replicationRole != null && replicationRole.equalsIgnoreCase("Slave"))
+		{
+			return false;
+		}
+		
 		return treap.delete(new FastString(key));
+
 	}
 
 	@Override
 	public int length() throws TException {
 		return treap.length();
 	}
+
+
+	public void setReplicationRole(String replicationRole) {
+		this.replicationRole = replicationRole;
+	}
+
 
 	@Override
 	public List<Pair> before(String key, int limit)
@@ -127,6 +150,7 @@ public class TreapDBBinaryProtocolServer implements Iface{
 		Map<FastString,byte[]> result = treap.after(new FastString(key), limit);
 		return byteArraytoBuffer(result);
 	}
+
 	
 	
 }

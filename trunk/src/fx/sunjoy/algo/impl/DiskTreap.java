@@ -3,6 +3,7 @@ package fx.sunjoy.algo.impl;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -14,7 +15,7 @@ import fx.sunjoy.utils.ByteUtil;
 
 
 public class DiskTreap<K extends Comparable<K>,V extends Serializable> implements ITreap<K, V> {
-
+	
 	private static final int DEFAULT_BLOCK_SIZE = 440;
 
 	//用于读写文件
@@ -280,6 +281,10 @@ public class DiskTreap<K extends Comparable<K>,V extends Serializable> implement
 			if(old_length==length()){
 				return false; //not found
 			}
+			
+			//在data文件中加入删除记录信息
+			this.blockUtil.addDeleteInfo(key) ;
+			
 			return true;
 		} catch (Exception e) {
 			throw new RuntimeException(e);
@@ -480,7 +485,23 @@ public class DiskTreap<K extends Comparable<K>,V extends Serializable> implement
 		}
 		return -1;
 	}
-
+	
+	public List<V> Sync(int dataFileNO, long syncPos) throws Exception
+	{
+		List<V> result = this.blockUtil.getNewData(dataFileNO, syncPos) ;
+		
+		return result ;
+	}
+	
+	public int getDataFileNO()
+	{
+		return this.blockUtil.getDataFileNO() ;
+	}
+	
+	public long getCurrentFilePos()
+	{
+		return this.blockUtil.getCurrentFilePos() ;
+	}
 	@Override
 	public Map<K, V> before(K key, int limit) {
 		lock.readLock().lock();
