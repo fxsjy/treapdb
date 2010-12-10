@@ -23,6 +23,8 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
   print 'Functions:'
   print '  void put(string key, string value)'
   print '  string get(string key)'
+  print '  void bulkPut( kvMap)'
+  print '   bulkGet( keyList)'
   print '   prefix(string prefixStr, i32 limit)'
   print '   kmax(i32 k)'
   print '   kmin(i32 k)'
@@ -92,6 +94,18 @@ elif cmd == 'get':
     print 'get requires 1 args'
     sys.exit(1)
   pp.pprint(client.get(args[0],))
+
+elif cmd == 'bulkPut':
+  if len(args) != 1:
+    print 'bulkPut requires 1 args'
+    sys.exit(1)
+  pp.pprint(client.bulkPut(eval(args[0]),))
+
+elif cmd == 'bulkGet':
+  if len(args) != 1:
+    print 'bulkGet requires 1 args'
+    sys.exit(1)
+  pp.pprint(client.bulkGet(eval(args[0]),))
 
 elif cmd == 'prefix':
   if len(args) != 2:

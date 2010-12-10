@@ -31,6 +31,20 @@ class Iface:
     """
     pass
 
+  def bulkPut(self, kvMap):
+    """
+    Parameters:
+     - kvMap
+    """
+    pass
+
+  def bulkGet(self, keyList):
+    """
+    Parameters:
+     - keyList
+    """
+    pass
+
   def prefix(self, prefixStr, limit):
     """
     Parameters:
@@ -155,6 +169,64 @@ class Client(Iface):
     if result.success != None:
       return result.success
     raise TApplicationException(TApplicationException.MISSING_RESULT, "get failed: unknown result");
+
+  def bulkPut(self, kvMap):
+    """
+    Parameters:
+     - kvMap
+    """
+    self.send_bulkPut(kvMap)
+    self.recv_bulkPut()
+
+  def send_bulkPut(self, kvMap):
+    self._oprot.writeMessageBegin('bulkPut', TMessageType.CALL, self._seqid)
+    args = bulkPut_args()
+    args.kvMap = kvMap
+    args.write(self._oprot)
+    self._oprot.writeMessageEnd()
+    self._oprot.trans.flush()
+
+  def recv_bulkPut(self, ):
+    (fname, mtype, rseqid) = self._iprot.readMessageBegin()
+    if mtype == TMessageType.EXCEPTION:
+      x = TApplicationException()
+      x.read(self._iprot)
+      self._iprot.readMessageEnd()
+      raise x
+    result = bulkPut_result()
+    result.read(self._iprot)
+    self._iprot.readMessageEnd()
+    return
+
+  def bulkGet(self, keyList):
+    """
+    Parameters:
+     - keyList
+    """
+    self.send_bulkGet(keyList)
+    return self.recv_bulkGet()
+
+  def send_bulkGet(self, keyList):
+    self._oprot.writeMessageBegin('bulkGet', TMessageType.CALL, self._seqid)
+    args = bulkGet_args()
+    args.keyList = keyList
+    args.write(self._oprot)
+    self._oprot.writeMessageEnd()
+    self._oprot.trans.flush()
+
+  def recv_bulkGet(self, ):
+    (fname, mtype, rseqid) = self._iprot.readMessageBegin()
+    if mtype == TMessageType.EXCEPTION:
+      x = TApplicationException()
+      x.read(self._iprot)
+      self._iprot.readMessageEnd()
+      raise x
+    result = bulkGet_result()
+    result.read(self._iprot)
+    self._iprot.readMessageEnd()
+    if result.success != None:
+      return result.success
+    raise TApplicationException(TApplicationException.MISSING_RESULT, "bulkGet failed: unknown result");
 
   def prefix(self, prefixStr, limit):
     """
@@ -408,6 +480,8 @@ class Processor(Iface, TProcessor):
     self._processMap = {}
     self._processMap["put"] = Processor.process_put
     self._processMap["get"] = Processor.process_get
+    self._processMap["bulkPut"] = Processor.process_bulkPut
+    self._processMap["bulkGet"] = Processor.process_bulkGet
     self._processMap["prefix"] = Processor.process_prefix
     self._processMap["kmax"] = Processor.process_kmax
     self._processMap["kmin"] = Processor.process_kmin
@@ -450,6 +524,28 @@ class Processor(Iface, TProcessor):
     result = get_result()
     result.success = self._handler.get(args.key)
     oprot.writeMessageBegin("get", TMessageType.REPLY, seqid)
+    result.write(oprot)
+    oprot.writeMessageEnd()
+    oprot.trans.flush()
+
+  def process_bulkPut(self, seqid, iprot, oprot):
+    args = bulkPut_args()
+    args.read(iprot)
+    iprot.readMessageEnd()
+    result = bulkPut_result()
+    self._handler.bulkPut(args.kvMap)
+    oprot.writeMessageBegin("bulkPut", TMessageType.REPLY, seqid)
+    result.write(oprot)
+    oprot.writeMessageEnd()
+    oprot.trans.flush()
+
+  def process_bulkGet(self, seqid, iprot, oprot):
+    args = bulkGet_args()
+    args.read(iprot)
+    iprot.readMessageEnd()
+    result = bulkGet_result()
+    result.success = self._handler.bulkGet(args.keyList)
+    oprot.writeMessageBegin("bulkGet", TMessageType.REPLY, seqid)
     result.write(oprot)
     oprot.writeMessageEnd()
     oprot.trans.flush()
@@ -774,6 +870,250 @@ class get_result:
   def __ne__(self, other):
     return not (self == other)
 
+class bulkPut_args:
+  """
+  Attributes:
+   - kvMap
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.MAP, 'kvMap', (TType.STRING,None,TType.STRING,None), None, ), # 1
+  )
+
+  def __init__(self, kvMap=None,):
+    self.kvMap = kvMap
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.MAP:
+          self.kvMap = {}
+          (_ktype1, _vtype2, _size0 ) = iprot.readMapBegin() 
+          for _i4 in xrange(_size0):
+            _key5 = iprot.readString();
+            _val6 = iprot.readString();
+            self.kvMap[_key5] = _val6
+          iprot.readMapEnd()
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('bulkPut_args')
+    if self.kvMap != None:
+      oprot.writeFieldBegin('kvMap', TType.MAP, 1)
+      oprot.writeMapBegin(TType.STRING, TType.STRING, len(self.kvMap))
+      for kiter7,viter8 in self.kvMap.items():
+        oprot.writeString(kiter7)
+        oprot.writeString(viter8)
+      oprot.writeMapEnd()
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+    def validate(self):
+      return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class bulkPut_result:
+
+  thrift_spec = (
+  )
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('bulkPut_result')
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+    def validate(self):
+      return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class bulkGet_args:
+  """
+  Attributes:
+   - keyList
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.LIST, 'keyList', (TType.STRING,None), None, ), # 1
+  )
+
+  def __init__(self, keyList=None,):
+    self.keyList = keyList
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.LIST:
+          self.keyList = []
+          (_etype12, _size9) = iprot.readListBegin()
+          for _i13 in xrange(_size9):
+            _elem14 = iprot.readString();
+            self.keyList.append(_elem14)
+          iprot.readListEnd()
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('bulkGet_args')
+    if self.keyList != None:
+      oprot.writeFieldBegin('keyList', TType.LIST, 1)
+      oprot.writeListBegin(TType.STRING, len(self.keyList))
+      for iter15 in self.keyList:
+        oprot.writeString(iter15)
+      oprot.writeListEnd()
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+    def validate(self):
+      return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class bulkGet_result:
+  """
+  Attributes:
+   - success
+  """
+
+  thrift_spec = (
+    (0, TType.LIST, 'success', (TType.STRUCT,(Pair, Pair.thrift_spec)), None, ), # 0
+  )
+
+  def __init__(self, success=None,):
+    self.success = success
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 0:
+        if ftype == TType.LIST:
+          self.success = []
+          (_etype19, _size16) = iprot.readListBegin()
+          for _i20 in xrange(_size16):
+            _elem21 = Pair()
+            _elem21.read(iprot)
+            self.success.append(_elem21)
+          iprot.readListEnd()
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('bulkGet_result')
+    if self.success != None:
+      oprot.writeFieldBegin('success', TType.LIST, 0)
+      oprot.writeListBegin(TType.STRUCT, len(self.success))
+      for iter22 in self.success:
+        iter22.write(oprot)
+      oprot.writeListEnd()
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+    def validate(self):
+      return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
 class prefix_args:
   """
   Attributes:
@@ -870,11 +1210,11 @@ class prefix_result:
       if fid == 0:
         if ftype == TType.LIST:
           self.success = []
-          (_etype3, _size0) = iprot.readListBegin()
-          for _i4 in xrange(_size0):
-            _elem5 = Pair()
-            _elem5.read(iprot)
-            self.success.append(_elem5)
+          (_etype26, _size23) = iprot.readListBegin()
+          for _i27 in xrange(_size23):
+            _elem28 = Pair()
+            _elem28.read(iprot)
+            self.success.append(_elem28)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -891,8 +1231,8 @@ class prefix_result:
     if self.success != None:
       oprot.writeFieldBegin('success', TType.LIST, 0)
       oprot.writeListBegin(TType.STRUCT, len(self.success))
-      for iter6 in self.success:
-        iter6.write(oprot)
+      for iter29 in self.success:
+        iter29.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
@@ -996,11 +1336,11 @@ class kmax_result:
       if fid == 0:
         if ftype == TType.LIST:
           self.success = []
-          (_etype10, _size7) = iprot.readListBegin()
-          for _i11 in xrange(_size7):
-            _elem12 = Pair()
-            _elem12.read(iprot)
-            self.success.append(_elem12)
+          (_etype33, _size30) = iprot.readListBegin()
+          for _i34 in xrange(_size30):
+            _elem35 = Pair()
+            _elem35.read(iprot)
+            self.success.append(_elem35)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -1017,8 +1357,8 @@ class kmax_result:
     if self.success != None:
       oprot.writeFieldBegin('success', TType.LIST, 0)
       oprot.writeListBegin(TType.STRUCT, len(self.success))
-      for iter13 in self.success:
-        iter13.write(oprot)
+      for iter36 in self.success:
+        iter36.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
@@ -1122,11 +1462,11 @@ class kmin_result:
       if fid == 0:
         if ftype == TType.LIST:
           self.success = []
-          (_etype17, _size14) = iprot.readListBegin()
-          for _i18 in xrange(_size14):
-            _elem19 = Pair()
-            _elem19.read(iprot)
-            self.success.append(_elem19)
+          (_etype40, _size37) = iprot.readListBegin()
+          for _i41 in xrange(_size37):
+            _elem42 = Pair()
+            _elem42.read(iprot)
+            self.success.append(_elem42)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -1143,8 +1483,8 @@ class kmin_result:
     if self.success != None:
       oprot.writeFieldBegin('success', TType.LIST, 0)
       oprot.writeListBegin(TType.STRUCT, len(self.success))
-      for iter20 in self.success:
-        iter20.write(oprot)
+      for iter43 in self.success:
+        iter43.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
@@ -1272,11 +1612,11 @@ class range_result:
       if fid == 0:
         if ftype == TType.LIST:
           self.success = []
-          (_etype24, _size21) = iprot.readListBegin()
-          for _i25 in xrange(_size21):
-            _elem26 = Pair()
-            _elem26.read(iprot)
-            self.success.append(_elem26)
+          (_etype47, _size44) = iprot.readListBegin()
+          for _i48 in xrange(_size44):
+            _elem49 = Pair()
+            _elem49.read(iprot)
+            self.success.append(_elem49)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -1293,8 +1633,8 @@ class range_result:
     if self.success != None:
       oprot.writeFieldBegin('success', TType.LIST, 0)
       oprot.writeListBegin(TType.STRUCT, len(self.success))
-      for iter27 in self.success:
-        iter27.write(oprot)
+      for iter50 in self.success:
+        iter50.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
@@ -1410,11 +1750,11 @@ class before_result:
       if fid == 0:
         if ftype == TType.LIST:
           self.success = []
-          (_etype31, _size28) = iprot.readListBegin()
-          for _i32 in xrange(_size28):
-            _elem33 = Pair()
-            _elem33.read(iprot)
-            self.success.append(_elem33)
+          (_etype54, _size51) = iprot.readListBegin()
+          for _i55 in xrange(_size51):
+            _elem56 = Pair()
+            _elem56.read(iprot)
+            self.success.append(_elem56)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -1431,8 +1771,8 @@ class before_result:
     if self.success != None:
       oprot.writeFieldBegin('success', TType.LIST, 0)
       oprot.writeListBegin(TType.STRUCT, len(self.success))
-      for iter34 in self.success:
-        iter34.write(oprot)
+      for iter57 in self.success:
+        iter57.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
@@ -1548,11 +1888,11 @@ class after_result:
       if fid == 0:
         if ftype == TType.LIST:
           self.success = []
-          (_etype38, _size35) = iprot.readListBegin()
-          for _i39 in xrange(_size35):
-            _elem40 = Pair()
-            _elem40.read(iprot)
-            self.success.append(_elem40)
+          (_etype61, _size58) = iprot.readListBegin()
+          for _i62 in xrange(_size58):
+            _elem63 = Pair()
+            _elem63.read(iprot)
+            self.success.append(_elem63)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -1569,8 +1909,8 @@ class after_result:
     if self.success != None:
       oprot.writeFieldBegin('success', TType.LIST, 0)
       oprot.writeListBegin(TType.STRUCT, len(self.success))
-      for iter41 in self.success:
-        iter41.write(oprot)
+      for iter64 in self.success:
+        iter64.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     oprot.writeFieldStop()

@@ -13,6 +13,7 @@ import java.util.concurrent.Executors;
 import fx.sunjoy.algo.impl.DiskTreap;
 import fx.sunjoy.server.cmd.AfterCommand;
 import fx.sunjoy.server.cmd.BeforeCommand;
+import fx.sunjoy.server.cmd.BulkGetCommand;
 import fx.sunjoy.server.cmd.DelCommand;
 import fx.sunjoy.server.cmd.GetCommand;
 import fx.sunjoy.server.cmd.KMaxCommand;
@@ -92,6 +93,8 @@ public class TreapDBTextProtocolServer {
 							new BeforeCommand().execute(diskTreap,msg.command,msg.body, os);
 						}else if(msg.command.startsWith("after ")){
 							new AfterCommand().execute(diskTreap,msg.command,msg.body, os);
+						}else if(msg.command.startsWith("bulkget ")){
+							new BulkGetCommand().execute(diskTreap,msg.command,msg.body, os);
 						}else{
 							os.write("ERROR\r\n".getBytes());
 						}

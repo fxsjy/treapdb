@@ -1,6 +1,9 @@
 package fx.sunjoy.test.unittest;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import junit.framework.TestCase;
 import fx.sunjoy.algo.impl.DiskTreap;
@@ -45,6 +48,53 @@ public class BaseTreapDBTest extends TestCase {
 		return indexFile;
 	}
 	
+	public void testBulkGet() throws Exception{
+		File strKeyIndexFile = prepareDataStringKey();
+		DiskTreap<String, Integer> strKeyIndex = new DiskTreap<String, Integer>(strKeyIndexFile);
+		String result =  strKeyIndex.bulkGet(Arrays.asList(new String[]{"IBM","18 year","haha","你好世界"})).toString() ;
+		assertEquals(result, "{18 year=789, IBM=456, 你好世界=7777}");
+		strKeyIndex.close();
+		//=======
+		DiskTreap<Integer, String> intKeyIndex = new DiskTreap<Integer, String>(prepareDataFastIntKey());
+		result =  intKeyIndex.bulkGet(Arrays.asList(new Integer[]{-12,345,133,99,0})).toString() ;
+		assertEquals(result, "{-12=abc, 0=zzz, 133=def, 345=中国}");
+		intKeyIndex.close();
+		//=======
+		DiskTreap<FastString, byte[]> fastStringIndex = new DiskTreap<FastString, byte[]>(prepareDataFastStringKey());
+		int size =  fastStringIndex.bulkGet(Arrays.asList(new FastString[]{new FastString("18 year"),new FastString("IBM")})).size() ;
+		assertEquals(size, 2);
+		fastStringIndex.close();
+	}
+	
+	public void testBlukPut() throws Exception{
+		File indexFile = new File("tmp/bulkput");
+		indexFile.delete();
+		
+		DiskTreap<String, Integer> index = new DiskTreap<String, Integer>(indexFile);
+		
+		Map<String,Integer> map = new HashMap<String,Integer>();
+		map.put("foo", 1);
+		map.put("footbar", 2);
+		map.put("azb", 3);
+		map.put("dddddd", 4);
+		map.put("aojiao", 5);
+		
+		Map<String,Integer> map2 = new HashMap<String, Integer>();
+		map2.put("azb", 13);
+		map2.put("footbar", 14);
+		map2.put("sjy", 140);
+		
+		index.bulkPut(map);
+		index.bulkPut(map2);
+		index.close();
+		
+		index = new DiskTreap<String, Integer>(indexFile);
+		assertEquals(index.prefix("a", 10).toString(), "{aojiao=5, azb=13}");
+		assertEquals(index.prefix("f", 10).toString(), "{foo=1, footbar=14}");
+		assertEquals(index.get("dddddd").toString(),"4");
+		assertEquals(index.length(),6);
+		index.close();
+	}
 	
 	public void testGet() throws Exception{
 		File strKeyIndexFile = prepareDataStringKey();
