@@ -1,0 +1,19 @@
+namespace java fx.sunjoy.server.gen
+
+struct Pair {
+  1: string key,
+  2: binary value,
+}
+
+service	TreapDBService{
+	void put(1:string key, 2:binary value);
+	binary get(1:string key),
+	list<Pair> prefix(1:string prefixStr,2:i32 limit),
+	list<Pair> kmax(1:i32 k),
+	list<Pair> kmin(1:i32 k),
+	list<Pair> range(1:string kStart, 2:string kEnd,3:i32 limit),
+	list<Pair> before(1:string key,2:i32 limit),
+	list<Pair> after(1:string key,2:i32 limit),
+	i32 length(),
+	bool remove(1:string key)
+} 
