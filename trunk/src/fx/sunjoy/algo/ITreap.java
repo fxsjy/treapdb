@@ -1,5 +1,6 @@
 package fx.sunjoy.algo;
 
+import java.util.List;
 import java.util.Map;
 
 public interface ITreap<K extends Comparable<K>, V> {
@@ -9,7 +10,11 @@ public interface ITreap<K extends Comparable<K>, V> {
 
 	//¶Á³ö
 	public abstract V get(K key);
-
+	
+	public abstract Map<K,V> bulkGet(List<K> keys);
+	
+	public abstract void bulkPut(Map<K,V> pairs);
+	
 	//·¶Î§²éÑ¯
 	public abstract Map<K,V> range(K start, K end,int limit);
 

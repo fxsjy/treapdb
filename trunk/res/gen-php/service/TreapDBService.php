@@ -11,6 +11,8 @@ include_once $GLOBALS['THRIFT_ROOT'].'/packages/service/service_types.php';
 interface TreapDBServiceIf {
   public function put($key, $value);
   public function get($key);
+  public function bulkPut($kvMap);
+  public function bulkGet($keyList);
   public function prefix($prefixStr, $limit);
   public function kmax($k);
   public function kmin($k);
@@ -130,6 +132,105 @@ class TreapDBServiceClient implements TreapDBServiceIf {
       return $result->success;
     }
     throw new Exception("get failed: unknown result");
+  }
+
+  public function bulkPut($kvMap)
+  {
+    $this->send_bulkPut($kvMap);
+    $this->recv_bulkPut();
+  }
+
+  public function send_bulkPut($kvMap)
+  {
+    $args = new TreapDBService_bulkPut_args();
+    $args->kvMap = $kvMap;
+    $bin_accel = ($this->output_ instanceof TProtocol::$TBINARYPROTOCOLACCELERATED) && function_exists('thrift_protocol_write_binary');
+    if ($bin_accel)
+    {
+      thrift_protocol_write_binary($this->output_, 'bulkPut', TMessageType::CALL, $args, $this->seqid_, $this->output_->isStrictWrite());
+    }
+    else
+    {
+      $this->output_->writeMessageBegin('bulkPut', TMessageType::CALL, $this->seqid_);
+      $args->write($this->output_);
+      $this->output_->writeMessageEnd();
+      $this->output_->getTransport()->flush();
+    }
+  }
+
+  public function recv_bulkPut()
+  {
+    $bin_accel = ($this->input_ instanceof TProtocol::$TBINARYPROTOCOLACCELERATED) && function_exists('thrift_protocol_read_binary');
+    if ($bin_accel) $result = thrift_protocol_read_binary($this->input_, 'TreapDBService_bulkPut_result', $this->input_->isStrictRead());
+    else
+    {
+      $rseqid = 0;
+      $fname = null;
+      $mtype = 0;
+
+      $this->input_->readMessageBegin($fname, $mtype, $rseqid);
+      if ($mtype == TMessageType::EXCEPTION) {
+        $x = new TApplicationException();
+        $x->read($this->input_);
+        $this->input_->readMessageEnd();
+        throw $x;
+      }
+      $result = new TreapDBService_bulkPut_result();
+      $result->read($this->input_);
+      $this->input_->readMessageEnd();
+    }
+    return;
+  }
+
+  public function bulkGet($keyList)
+  {
+    $this->send_bulkGet($keyList);
+    return $this->recv_bulkGet();
+  }
+
+  public function send_bulkGet($keyList)
+  {
+    $args = new TreapDBService_bulkGet_args();
+    $args->keyList = $keyList;
+    $bin_accel = ($this->output_ instanceof TProtocol::$TBINARYPROTOCOLACCELERATED) && function_exists('thrift_protocol_write_binary');
+    if ($bin_accel)
+    {
+      thrift_protocol_write_binary($this->output_, 'bulkGet', TMessageType::CALL, $args, $this->seqid_, $this->output_->isStrictWrite());
+    }
+    else
+    {
+      $this->output_->writeMessageBegin('bulkGet', TMessageType::CALL, $this->seqid_);
+      $args->write($this->output_);
+      $this->output_->writeMessageEnd();
+      $this->output_->getTransport()->flush();
+    }
+  }
+
+  public function recv_bulkGet()
+  {
+    $bin_accel = ($this->input_ instanceof TProtocol::$TBINARYPROTOCOLACCELERATED) && function_exists('thrift_protocol_read_binary');
+    if ($bin_accel) $result = thrift_protocol_read_binary($this->input_, 'TreapDBService_bulkGet_result', $this->input_->isStrictRead());
+    else
+    {
+      $rseqid = 0;
+      $fname = null;
+      $mtype = 0;
+
+      $this->input_->readMessageBegin($fname, $mtype, $rseqid);
+      if ($mtype == TMessageType::EXCEPTION) {
+        $x = new TApplicationException();
+        $x->read($this->input_);
+        $this->input_->readMessageEnd();
+        throw $x;
+      }
+      $result = new TreapDBService_bulkGet_result();
+      $result->read($this->input_);
+      $this->input_->readMessageEnd();
+    }
+    if ($result->success !== null) {
+      return $result->success;
+    }
+    throw new Exception("bulkGet failed: unknown result");
   }
 
   public function prefix($prefixStr, $limit)
@@ -834,6 +935,360 @@ class TreapDBService_get_result {
 
 }
 
+class TreapDBService_bulkPut_args {
+  static $_TSPEC;
+
+  public $kvMap = null;
+
+  public function __construct($vals=null) {
+    if (!isset(self::$_TSPEC)) {
+      self::$_TSPEC = array(
+        1 => array(
+          'var' => 'kvMap',
+          'type' => TType::MAP,
+          'ktype' => TType::STRING,
+          'vtype' => TType::STRING,
+          'key' => array(
+            'type' => TType::STRING,
+          ),
+          'val' => array(
+            'type' => TType::STRING,
+            ),
+          ),
+        );
+    }
+    if (is_array($vals)) {
+      if (isset($vals['kvMap'])) {
+        $this->kvMap = $vals['kvMap'];
+      }
+    }
+  }
+
+  public function getName() {
+    return 'TreapDBService_bulkPut_args';
+  }
+
+  public function read($input)
+  {
+    $xfer = 0;
+    $fname = null;
+    $ftype = 0;
+    $fid = 0;
+    $xfer += $input->readStructBegin($fname);
+    while (true)
+    {
+      $xfer += $input->readFieldBegin($fname, $ftype, $fid);
+      if ($ftype == TType::STOP) {
+        break;
+      }
+      switch ($fid)
+      {
+        case 1:
+          if ($ftype == TType::MAP) {
+            $this->kvMap = array();
+            $_size0 = 0;
+            $_ktype1 = 0;
+            $_vtype2 = 0;
+            $xfer += $input->readMapBegin($_ktype1, $_vtype2, $_size0);
+            for ($_i4 = 0; $_i4 < $_size0; ++$_i4)
+            {
+              $key5 = '';
+              $val6 = '';
+              $xfer += $input->readString($key5);
+              $xfer += $input->readString($val6);
+              $this->kvMap[$key5] = $val6;
+            }
+            $xfer += $input->readMapEnd();
+          } else {
+            $xfer += $input->skip($ftype);
+          }
+          break;
+        default:
+          $xfer += $input->skip($ftype);
+          break;
+      }
+      $xfer += $input->readFieldEnd();
+    }
+    $xfer += $input->readStructEnd();
+    return $xfer;
+  }
+
+  public function write($output) {
+    $xfer = 0;
+    $xfer += $output->writeStructBegin('TreapDBService_bulkPut_args');
+    if ($this->kvMap !== null) {
+      if (!is_array($this->kvMap)) {
+        throw new TProtocolException('Bad type in structure.', TProtocolException::INVALID_DATA);
+      }
+      $xfer += $output->writeFieldBegin('kvMap', TType::MAP, 1);
+      {
+        $output->writeMapBegin(TType::STRING, TType::STRING, count($this->kvMap));
+        {
+          foreach ($this->kvMap as $kiter7 => $viter8)
+          {
+            $xfer += $output->writeString($kiter7);
+            $xfer += $output->writeString($viter8);
+          }
+        }
+        $output->writeMapEnd();
+      }
+      $xfer += $output->writeFieldEnd();
+    }
+    $xfer += $output->writeFieldStop();
+    $xfer += $output->writeStructEnd();
+    return $xfer;
+  }
+
+}
+
+class TreapDBService_bulkPut_result {
+  static $_TSPEC;
+
+
+  public function __construct() {
+    if (!isset(self::$_TSPEC)) {
+      self::$_TSPEC = array(
+        );
+    }
+  }
+
+  public function getName() {
+    return 'TreapDBService_bulkPut_result';
+  }
+
+  public function read($input)
+  {
+    $xfer = 0;
+    $fname = null;
+    $ftype = 0;
+    $fid = 0;
+    $xfer += $input->readStructBegin($fname);
+    while (true)
+    {
+      $xfer += $input->readFieldBegin($fname, $ftype, $fid);
+      if ($ftype == TType::STOP) {
+        break;
+      }
+      switch ($fid)
+      {
+        default:
+          $xfer += $input->skip($ftype);
+          break;
+      }
+      $xfer += $input->readFieldEnd();
+    }
+    $xfer += $input->readStructEnd();
+    return $xfer;
+  }
+
+  public function write($output) {
+    $xfer = 0;
+    $xfer += $output->writeStructBegin('TreapDBService_bulkPut_result');
+    $xfer += $output->writeFieldStop();
+    $xfer += $output->writeStructEnd();
+    return $xfer;
+  }
+
+}
+
+class TreapDBService_bulkGet_args {
+  static $_TSPEC;
+
+  public $keyList = null;
+
+  public function __construct($vals=null) {
+    if (!isset(self::$_TSPEC)) {
+      self::$_TSPEC = array(
+        1 => array(
+          'var' => 'keyList',
+          'type' => TType::LST,
+          'etype' => TType::STRING,
+          'elem' => array(
+            'type' => TType::STRING,
+            ),
+          ),
+        );
+    }
+    if (is_array($vals)) {
+      if (isset($vals['keyList'])) {
+        $this->keyList = $vals['keyList'];
+      }
+    }
+  }
+
+  public function getName() {
+    return 'TreapDBService_bulkGet_args';
+  }
+
+  public function read($input)
+  {
+    $xfer = 0;
+    $fname = null;
+    $ftype = 0;
+    $fid = 0;
+    $xfer += $input->readStructBegin($fname);
+    while (true)
+    {
+      $xfer += $input->readFieldBegin($fname, $ftype, $fid);
+      if ($ftype == TType::STOP) {
+        break;
+      }
+      switch ($fid)
+      {
+        case 1:
+          if ($ftype == TType::LST) {
+            $this->keyList = array();
+            $_size9 = 0;
+            $_etype12 = 0;
+            $xfer += $input->readListBegin($_etype12, $_size9);
+            for ($_i13 = 0; $_i13 < $_size9; ++$_i13)
+            {
+              $elem14 = null;
+              $xfer += $input->readString($elem14);
+              $this->keyList []= $elem14;
+            }
+            $xfer += $input->readListEnd();
+          } else {
+            $xfer += $input->skip($ftype);
+          }
+          break;
+        default:
+          $xfer += $input->skip($ftype);
+          break;
+      }
+      $xfer += $input->readFieldEnd();
+    }
+    $xfer += $input->readStructEnd();
+    return $xfer;
+  }
+
+  public function write($output) {
+    $xfer = 0;
+    $xfer += $output->writeStructBegin('TreapDBService_bulkGet_args');
+    if ($this->keyList !== null) {
+      if (!is_array($this->keyList)) {
+        throw new TProtocolException('Bad type in structure.', TProtocolException::INVALID_DATA);
+      }
+      $xfer += $output->writeFieldBegin('keyList', TType::LST, 1);
+      {
+        $output->writeListBegin(TType::STRING, count($this->keyList));
+        {
+          foreach ($this->keyList as $iter15)
+          {
+            $xfer += $output->writeString($iter15);
+          }
+        }
+        $output->writeListEnd();
+      }
+      $xfer += $output->writeFieldEnd();
+    }
+    $xfer += $output->writeFieldStop();
+    $xfer += $output->writeStructEnd();
+    return $xfer;
+  }
+
+}
+
+class TreapDBService_bulkGet_result {
+  static $_TSPEC;
+
+  public $success = null;
+
+  public function __construct($vals=null) {
+    if (!isset(self::$_TSPEC)) {
+      self::$_TSPEC = array(
+        0 => array(
+          'var' => 'success',
+          'type' => TType::LST,
+          'etype' => TType::STRUCT,
+          'elem' => array(
+            'type' => TType::STRUCT,
+            'class' => 'Pair',
+            ),
+          ),
+        );
+    }
+    if (is_array($vals)) {
+      if (isset($vals['success'])) {
+        $this->success = $vals['success'];
+      }
+    }
+  }
+
+  public function getName() {
+    return 'TreapDBService_bulkGet_result';
+  }
+
+  public function read($input)
+  {
+    $xfer = 0;
+    $fname = null;
+    $ftype = 0;
+    $fid = 0;
+    $xfer += $input->readStructBegin($fname);
+    while (true)
+    {
+      $xfer += $input->readFieldBegin($fname, $ftype, $fid);
+      if ($ftype == TType::STOP) {
+        break;
+      }
+      switch ($fid)
+      {
+        case 0:
+          if ($ftype == TType::LST) {
+            $this->success = array();
+            $_size16 = 0;
+            $_etype19 = 0;
+            $xfer += $input->readListBegin($_etype19, $_size16);
+            for ($_i20 = 0; $_i20 < $_size16; ++$_i20)
+            {
+              $elem21 = null;
+              $elem21 = new Pair();
+              $xfer += $elem21->read($input);
+              $this->success []= $elem21;
+            }
+            $xfer += $input->readListEnd();
+          } else {
+            $xfer += $input->skip($ftype);
+          }
+          break;
+        default:
+          $xfer += $input->skip($ftype);
+          break;
+      }
+      $xfer += $input->readFieldEnd();
+    }
+    $xfer += $input->readStructEnd();
+    return $xfer;
+  }
+
+  public function write($output) {
+    $xfer = 0;
+    $xfer += $output->writeStructBegin('TreapDBService_bulkGet_result');
+    if ($this->success !== null) {
+      if (!is_array($this->success)) {
+        throw new TProtocolException('Bad type in structure.', TProtocolException::INVALID_DATA);
+      }
+      $xfer += $output->writeFieldBegin('success', TType::LST, 0);
+      {
+        $output->writeListBegin(TType::STRUCT, count($this->success));
+        {
+          foreach ($this->success as $iter22)
+          {
+            $xfer += $iter22->write($output);
+          }
+        }
+        $output->writeListEnd();
+      }
+      $xfer += $output->writeFieldEnd();
+    }
+    $xfer += $output->writeFieldStop();
+    $xfer += $output->writeStructEnd();
+    return $xfer;
+  }
+
+}
+
 class TreapDBService_prefix_args {
   static $_TSPEC;
 
@@ -974,15 +1429,15 @@ class TreapDBService_prefix_result {
         case 0:
           if ($ftype == TType::LST) {
             $this->success = array();
-            $_size0 = 0;
-            $_etype3 = 0;
-            $xfer += $input->readListBegin($_etype3, $_size0);
-            for ($_i4 = 0; $_i4 < $_size0; ++$_i4)
+            $_size23 = 0;
+            $_etype26 = 0;
+            $xfer += $input->readListBegin($_etype26, $_size23);
+            for ($_i27 = 0; $_i27 < $_size23; ++$_i27)
             {
-              $elem5 = null;
-              $elem5 = new Pair();
-              $xfer += $elem5->read($input);
-              $this->success []= $elem5;
+              $elem28 = null;
+              $elem28 = new Pair();
+              $xfer += $elem28->read($input);
+              $this->success []= $elem28;
             }
             $xfer += $input->readListEnd();
           } else {
@@ -1010,9 +1465,9 @@ class TreapDBService_prefix_result {
       {
         $output->writeListBegin(TType::STRUCT, count($this->success));
         {
-          foreach ($this->success as $iter6)
+          foreach ($this->success as $iter29)
           {
-            $xfer += $iter6->write($output);
+            $xfer += $iter29->write($output);
           }
         }
         $output->writeListEnd();
@@ -1146,15 +1601,15 @@ class TreapDBService_kmax_result {
         case 0:
           if ($ftype == TType::LST) {
             $this->success = array();
-            $_size7 = 0;
-            $_etype10 = 0;
-            $xfer += $input->readListBegin($_etype10, $_size7);
-            for ($_i11 = 0; $_i11 < $_size7; ++$_i11)
+            $_size30 = 0;
+            $_etype33 = 0;
+            $xfer += $input->readListBegin($_etype33, $_size30);
+            for ($_i34 = 0; $_i34 < $_size30; ++$_i34)
             {
-              $elem12 = null;
-              $elem12 = new Pair();
-              $xfer += $elem12->read($input);
-              $this->success []= $elem12;
+              $elem35 = null;
+              $elem35 = new Pair();
+              $xfer += $elem35->read($input);
+              $this->success []= $elem35;
             }
             $xfer += $input->readListEnd();
           } else {
@@ -1182,9 +1637,9 @@ class TreapDBService_kmax_result {
       {
         $output->writeListBegin(TType::STRUCT, count($this->success));
         {
-          foreach ($this->success as $iter13)
+          foreach ($this->success as $iter36)
           {
-            $xfer += $iter13->write($output);
+            $xfer += $iter36->write($output);
           }
         }
         $output->writeListEnd();
@@ -1318,15 +1773,15 @@ class TreapDBService_kmin_result {
         case 0:
           if ($ftype == TType::LST) {
             $this->success = array();
-            $_size14 = 0;
-            $_etype17 = 0;
-            $xfer += $input->readListBegin($_etype17, $_size14);
-            for ($_i18 = 0; $_i18 < $_size14; ++$_i18)
+            $_size37 = 0;
+            $_etype40 = 0;
+            $xfer += $input->readListBegin($_etype40, $_size37);
+            for ($_i41 = 0; $_i41 < $_size37; ++$_i41)
             {
-              $elem19 = null;
-              $elem19 = new Pair();
-              $xfer += $elem19->read($input);
-              $this->success []= $elem19;
+              $elem42 = null;
+              $elem42 = new Pair();
+              $xfer += $elem42->read($input);
+              $this->success []= $elem42;
             }
             $xfer += $input->readListEnd();
           } else {
@@ -1354,9 +1809,9 @@ class TreapDBService_kmin_result {
       {
         $output->writeListBegin(TType::STRUCT, count($this->success));
         {
-          foreach ($this->success as $iter20)
+          foreach ($this->success as $iter43)
           {
-            $xfer += $iter20->write($output);
+            $xfer += $iter43->write($output);
           }
         }
         $output->writeListEnd();
@@ -1530,15 +1985,15 @@ class TreapDBService_range_result {
         case 0:
           if ($ftype == TType::LST) {
             $this->success = array();
-            $_size21 = 0;
-            $_etype24 = 0;
-            $xfer += $input->readListBegin($_etype24, $_size21);
-            for ($_i25 = 0; $_i25 < $_size21; ++$_i25)
+            $_size44 = 0;
+            $_etype47 = 0;
+            $xfer += $input->readListBegin($_etype47, $_size44);
+            for ($_i48 = 0; $_i48 < $_size44; ++$_i48)
             {
-              $elem26 = null;
-              $elem26 = new Pair();
-              $xfer += $elem26->read($input);
-              $this->success []= $elem26;
+              $elem49 = null;
+              $elem49 = new Pair();
+              $xfer += $elem49->read($input);
+              $this->success []= $elem49;
             }
             $xfer += $input->readListEnd();
           } else {
@@ -1566,9 +2021,9 @@ class TreapDBService_range_result {
       {
         $output->writeListBegin(TType::STRUCT, count($this->success));
         {
-          foreach ($this->success as $iter27)
+          foreach ($this->success as $iter50)
           {
-            $xfer += $iter27->write($output);
+            $xfer += $iter50->write($output);
           }
         }
         $output->writeListEnd();
@@ -1722,15 +2177,15 @@ class TreapDBService_before_result {
         case 0:
           if ($ftype == TType::LST) {
             $this->success = array();
-            $_size28 = 0;
-            $_etype31 = 0;
-            $xfer += $input->readListBegin($_etype31, $_size28);
-            for ($_i32 = 0; $_i32 < $_size28; ++$_i32)
+            $_size51 = 0;
+            $_etype54 = 0;
+            $xfer += $input->readListBegin($_etype54, $_size51);
+            for ($_i55 = 0; $_i55 < $_size51; ++$_i55)
             {
-              $elem33 = null;
-              $elem33 = new Pair();
-              $xfer += $elem33->read($input);
-              $this->success []= $elem33;
+              $elem56 = null;
+              $elem56 = new Pair();
+              $xfer += $elem56->read($input);
+              $this->success []= $elem56;
             }
             $xfer += $input->readListEnd();
           } else {
@@ -1758,9 +2213,9 @@ class TreapDBService_before_result {
       {
         $output->writeListBegin(TType::STRUCT, count($this->success));
         {
-          foreach ($this->success as $iter34)
+          foreach ($this->success as $iter57)
           {
-            $xfer += $iter34->write($output);
+            $xfer += $iter57->write($output);
           }
         }
         $output->writeListEnd();
@@ -1914,15 +2369,15 @@ class TreapDBService_after_result {
         case 0:
           if ($ftype == TType::LST) {
             $this->success = array();
-            $_size35 = 0;
-            $_etype38 = 0;
-            $xfer += $input->readListBegin($_etype38, $_size35);
-            for ($_i39 = 0; $_i39 < $_size35; ++$_i39)
+            $_size58 = 0;
+            $_etype61 = 0;
+            $xfer += $input->readListBegin($_etype61, $_size58);
+            for ($_i62 = 0; $_i62 < $_size58; ++$_i62)
             {
-              $elem40 = null;
-              $elem40 = new Pair();
-              $xfer += $elem40->read($input);
-              $this->success []= $elem40;
+              $elem63 = null;
+              $elem63 = new Pair();
+              $xfer += $elem63->read($input);
+              $this->success []= $elem63;
             }
             $xfer += $input->readListEnd();
           } else {
@@ -1950,9 +2405,9 @@ class TreapDBService_after_result {
       {
         $output->writeListBegin(TType::STRUCT, count($this->success));
         {
-          foreach ($this->success as $iter41)
+          foreach ($this->success as $iter64)
           {
-            $xfer += $iter41->write($output);
+            $xfer += $iter64->write($output);
           }
         }
         $output->writeListEnd();

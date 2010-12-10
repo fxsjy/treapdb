@@ -5,7 +5,11 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.NavigableMap;
+import java.util.NavigableSet;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import fx.sunjoy.algo.ITreap;
@@ -60,13 +64,7 @@ public class DiskTreap<K extends Comparable<K>,V extends Serializable> implement
 	@Override
 	public void put(K key,V value){
 		DiskTreapHeader header;
-		if(ByteUtil.isSmallObj(value)){
-			valueCache.put(key, value);
-			bigValueCache.remove(key);
-		}else{
-			valueCache.remove(key);
-			bigValueCache.put(key, value);
-		}
+		commitToCache(key, value);
 		try {
 			lock.writeLock().lock();
 			header = this.blockUtil.readHeader();
@@ -80,6 +78,16 @@ public class DiskTreap<K extends Comparable<K>,V extends Serializable> implement
 			throw new RuntimeException(e);
 		}finally{
 			lock.writeLock().unlock();
+		}
+	}
+
+	private void commitToCache(K key, V value) {
+		if(ByteUtil.isSmallObj(value)){
+			valueCache.put(key, value);
+			bigValueCache.remove(key);
+		}else{
+			valueCache.remove(key);
+			bigValueCache.put(key, value);
 		}
 	}
 	
@@ -102,13 +110,7 @@ public class DiskTreap<K extends Comparable<K>,V extends Serializable> implement
 			if(idx==-1)return null;
 			else{
 				DiskTreapNode< K, V> node = this.blockUtil.readNode(idx, true);
-				if(ByteUtil.isSmallObj(node.value)){
-					valueCache.put(key, node.value);
-					bigValueCache.remove(key);
-				}else{
-					valueCache.remove(key);
-					bigValueCache.put(key, node.value);
-				}
+				commitToCache(key, node.value);
 				return node.value;
 			}
 		} catch (Exception e) {
@@ -575,5 +577,106 @@ public class DiskTreap<K extends Comparable<K>,V extends Serializable> implement
 			nextSearch(cur.rNo, key, results, limit);
 		}
 	}
+
+	@Override
+	public Map<K,V> bulkGet(List<K> keys) {
+		lock.readLock().lock();
+		try {
+			Map<K,V> result = new TreeMap<K,V>();
+			TreeSet<K> keySet = new TreeSet<K>();
+			
+			for(K k : keys){
+				if(valueCache.containsKey(k)){
+					result.put(k, valueCache.get(k));
+				}else if(bigValueCache.containsKey(k)){
+					result.put(k, bigValueCache.get(k));
+				}else{
+					keySet.add(k); //cache miss
+				}
+			}
+			
+			DiskTreapHeader header = this.blockUtil.readHeader();
+			realBulkGet(header.rootNo,keySet,result);
+			return result;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}finally{
+			lock.readLock().unlock();
+		}
+	}
+
+	private void realBulkGet(int startNode, NavigableSet<K> keySet,Map<K,V> result) throws Exception {
+		if(startNode==-1 || keySet.isEmpty())return;
+		DiskTreapNode<K, V> cur = this.blockUtil.readNode(startNode, false);
+		if(keySet.contains(cur.key)){
+			this.blockUtil.filleNodeValue(cur);
+			result.put(cur.key, cur.value);
+			commitToCache(cur.key, cur.value);
+		}
+		NavigableSet<K> leftKeySet = keySet.headSet(cur.key,false);
+		NavigableSet<K>  rightKeySet = keySet.tailSet(cur.key,false);
+		realBulkGet(cur.lNo, leftKeySet, result);
+		realBulkGet(cur.rNo, rightKeySet, result);
+	}
+
+	@Override
+	public void bulkPut(Map<K, V> pairs) {
+		DiskTreapHeader header;
+		try {
+			lock.writeLock().lock();
+			header = this.blockUtil.readHeader();
+			int rootNo = bulkInsert(header.rootNo,new TreeMap<K,V>(pairs));
+			header = this.blockUtil.readHeader();
+			header.rootNo = rootNo;
+			this.blockUtil.writeHeader(header);	
+			
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}finally{
+			lock.writeLock().unlock();
+		}
+	}
+
+	private int bulkInsert(int startNode, NavigableMap<K, V> pairs) throws Exception {
+		if(pairs.isEmpty())return startNode;
+		if(startNode==-1){
+			for(Entry<K,V> e : pairs.entrySet()){
+				//commitToCache(e.getKey(), e.getValue());
+				startNode = insert(startNode, e.getKey(), e.getValue());
+			}
+			return startNode;
+		}else{
+			DiskTreapNode<K,V> currentNode = this.blockUtil.readNode(startNode, false);
+			int oldNode = startNode;
+			
+			if(pairs.containsKey(currentNode.key)){
+				currentNode.value = pairs.get(currentNode.key);
+				//commitToCache(currentNode.key, currentNode.value);
+				this.blockUtil.writeNode(startNode, currentNode, true);
+			}
+			
+			currentNode.rNo = bulkInsert(currentNode.rNo,pairs.tailMap(currentNode.key,false));
+			if(currentNode.rNo!=-1){
+				DiskTreapNode<K, V> rightNode = this.blockUtil.readNode(currentNode.rNo, false);
+				currentNode.r_size = rightNode.r_size+1+rightNode.l_size;
+				if(rightNode.fix < currentNode.fix){
+					startNode = rotateLeft(oldNode);
+				}
+			}
+			
+			currentNode.lNo = bulkInsert(currentNode.lNo,pairs.headMap(currentNode.key, false));
+			if(currentNode.lNo!=-1){
+				DiskTreapNode< K, V> leftNode = this.blockUtil.readNode(currentNode.lNo, false);
+				currentNode.l_size = leftNode.l_size+1+leftNode.r_size;
+				if(leftNode.fix < currentNode.fix){
+					startNode = rotateRight(oldNode);
+				}
+			}
+
+			this.blockUtil.writeNode(oldNode, currentNode, false);
+			return startNode;
+		}
+	}
+
 
 }

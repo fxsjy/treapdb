@@ -34,6 +34,10 @@ public class TreapDBService {
 
     public ByteBuffer get(String key) throws TException;
 
+    public void bulkPut(Map<String,ByteBuffer> kvMap) throws TException;
+
+    public List<Pair> bulkGet(List<String> keyList) throws TException;
+
     public List<Pair> prefix(String prefixStr, int limit) throws TException;
 
     public List<Pair> kmax(int k) throws TException;
@@ -57,6 +61,10 @@ public class TreapDBService {
     public void put(String key, ByteBuffer value, AsyncMethodCallback<AsyncClient.put_call> resultHandler) throws TException;
 
     public void get(String key, AsyncMethodCallback<AsyncClient.get_call> resultHandler) throws TException;
+
+    public void bulkPut(Map<String,ByteBuffer> kvMap, AsyncMethodCallback<AsyncClient.bulkPut_call> resultHandler) throws TException;
+
+    public void bulkGet(List<String> keyList, AsyncMethodCallback<AsyncClient.bulkGet_call> resultHandler) throws TException;
 
     public void prefix(String prefixStr, int limit, AsyncMethodCallback<AsyncClient.prefix_call> resultHandler) throws TException;
 
@@ -181,6 +189,75 @@ public class TreapDBService {
         return result.success;
       }
       throw new TApplicationException(TApplicationException.MISSING_RESULT, "get failed: unknown result");
+    }
+
+    public void bulkPut(Map<String,ByteBuffer> kvMap) throws TException
+    {
+      send_bulkPut(kvMap);
+      recv_bulkPut();
+    }
+
+    public void send_bulkPut(Map<String,ByteBuffer> kvMap) throws TException
+    {
+      oprot_.writeMessageBegin(new TMessage("bulkPut", TMessageType.CALL, ++seqid_));
+      bulkPut_args args = new bulkPut_args();
+      args.setKvMap(kvMap);
+      args.write(oprot_);
+      oprot_.writeMessageEnd();
+      oprot_.getTransport().flush();
+    }
+
+    public void recv_bulkPut() throws TException
+    {
+      TMessage msg = iprot_.readMessageBegin();
+      if (msg.type == TMessageType.EXCEPTION) {
+        TApplicationException x = TApplicationException.read(iprot_);
+        iprot_.readMessageEnd();
+        throw x;
+      }
+      if (msg.seqid != seqid_) {
+        throw new TApplicationException(TApplicationException.BAD_SEQUENCE_ID, "bulkPut failed: out of sequence response");
+      }
+      bulkPut_result result = new bulkPut_result();
+      result.read(iprot_);
+      iprot_.readMessageEnd();
+      return;
+    }
+
+    public List<Pair> bulkGet(List<String> keyList) throws TException
+    {
+      send_bulkGet(keyList);
+      return recv_bulkGet();
+    }
+
+    public void send_bulkGet(List<String> keyList) throws TException
+    {
+      oprot_.writeMessageBegin(new TMessage("bulkGet", TMessageType.CALL, ++seqid_));
+      bulkGet_args args = new bulkGet_args();
+      args.setKeyList(keyList);
+      args.write(oprot_);
+      oprot_.writeMessageEnd();
+      oprot_.getTransport().flush();
+    }
+
+    public List<Pair> recv_bulkGet() throws TException
+    {
+      TMessage msg = iprot_.readMessageBegin();
+      if (msg.type == TMessageType.EXCEPTION) {
+        TApplicationException x = TApplicationException.read(iprot_);
+        iprot_.readMessageEnd();
+        throw x;
+      }
+      if (msg.seqid != seqid_) {
+        throw new TApplicationException(TApplicationException.BAD_SEQUENCE_ID, "bulkGet failed: out of sequence response");
+      }
+      bulkGet_result result = new bulkGet_result();
+      result.read(iprot_);
+      iprot_.readMessageEnd();
+      if (result.isSetSuccess()) {
+        return result.success;
+      }
+      throw new TApplicationException(TApplicationException.MISSING_RESULT, "bulkGet failed: unknown result");
     }
 
     public List<Pair> prefix(String prefixStr, int limit) throws TException
@@ -558,6 +635,68 @@ public class TreapDBService {
       }
     }
 
+    public void bulkPut(Map<String,ByteBuffer> kvMap, AsyncMethodCallback<bulkPut_call> resultHandler) throws TException {
+      checkReady();
+      bulkPut_call method_call = new bulkPut_call(kvMap, resultHandler, this, protocolFactory, transport);
+      manager.call(method_call);
+    }
+
+    public static class bulkPut_call extends TAsyncMethodCall {
+      private Map<String,ByteBuffer> kvMap;
+      public bulkPut_call(Map<String,ByteBuffer> kvMap, AsyncMethodCallback<bulkPut_call> resultHandler, TAsyncClient client, TProtocolFactory protocolFactory, TNonblockingTransport transport) throws TException {
+        super(client, protocolFactory, transport, resultHandler, false);
+        this.kvMap = kvMap;
+      }
+
+      public void write_args(TProtocol prot) throws TException {
+        prot.writeMessageBegin(new TMessage("bulkPut", TMessageType.CALL, 0));
+        bulkPut_args args = new bulkPut_args();
+        args.setKvMap(kvMap);
+        args.write(prot);
+        prot.writeMessageEnd();
+      }
+
+      public void getResult() throws TException {
+        if (getState() != State.RESPONSE_READ) {
+          throw new IllegalStateException("Method call not finished!");
+        }
+        TMemoryInputTransport memoryTransport = new TMemoryInputTransport(getFrameBuffer().array());
+        TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
+        (new Client(prot)).recv_bulkPut();
+      }
+    }
+
+    public void bulkGet(List<String> keyList, AsyncMethodCallback<bulkGet_call> resultHandler) throws TException {
+      checkReady();
+      bulkGet_call method_call = new bulkGet_call(keyList, resultHandler, this, protocolFactory, transport);
+      manager.call(method_call);
+    }
+
+    public static class bulkGet_call extends TAsyncMethodCall {
+      private List<String> keyList;
+      public bulkGet_call(List<String> keyList, AsyncMethodCallback<bulkGet_call> resultHandler, TAsyncClient client, TProtocolFactory protocolFactory, TNonblockingTransport transport) throws TException {
+        super(client, protocolFactory, transport, resultHandler, false);
+        this.keyList = keyList;
+      }
+
+      public void write_args(TProtocol prot) throws TException {
+        prot.writeMessageBegin(new TMessage("bulkGet", TMessageType.CALL, 0));
+        bulkGet_args args = new bulkGet_args();
+        args.setKeyList(keyList);
+        args.write(prot);
+        prot.writeMessageEnd();
+      }
+
+      public List<Pair> getResult() throws TException {
+        if (getState() != State.RESPONSE_READ) {
+          throw new IllegalStateException("Method call not finished!");
+        }
+        TMemoryInputTransport memoryTransport = new TMemoryInputTransport(getFrameBuffer().array());
+        TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
+        return (new Client(prot)).recv_bulkGet();
+      }
+    }
+
     public void prefix(String prefixStr, int limit, AsyncMethodCallback<prefix_call> resultHandler) throws TException {
       checkReady();
       prefix_call method_call = new prefix_call(prefixStr, limit, resultHandler, this, protocolFactory, transport);
@@ -827,6 +966,8 @@ public class TreapDBService {
       iface_ = iface;
       processMap_.put("put", new put());
       processMap_.put("get", new get());
+      processMap_.put("bulkPut", new bulkPut());
+      processMap_.put("bulkGet", new bulkGet());
       processMap_.put("prefix", new prefix());
       processMap_.put("kmax", new kmax());
       processMap_.put("kmin", new kmin());
@@ -907,6 +1048,58 @@ public class TreapDBService {
         get_result result = new get_result();
         result.success = iface_.get(args.key);
         oprot.writeMessageBegin(new TMessage("get", TMessageType.REPLY, seqid));
+        result.write(oprot);
+        oprot.writeMessageEnd();
+        oprot.getTransport().flush();
+      }
+
+    }
+
+    private class bulkPut implements ProcessFunction {
+      public void process(int seqid, TProtocol iprot, TProtocol oprot) throws TException
+      {
+        bulkPut_args args = new bulkPut_args();
+        try {
+          args.read(iprot);
+        } catch (TProtocolException e) {
+          iprot.readMessageEnd();
+          TApplicationException x = new TApplicationException(TApplicationException.PROTOCOL_ERROR, e.getMessage());
+          oprot.writeMessageBegin(new TMessage("bulkPut", TMessageType.EXCEPTION, seqid));
+          x.write(oprot);
+          oprot.writeMessageEnd();
+          oprot.getTransport().flush();
+          return;
+        }
+        iprot.readMessageEnd();
+        bulkPut_result result = new bulkPut_result();
+        iface_.bulkPut(args.kvMap);
+        oprot.writeMessageBegin(new TMessage("bulkPut", TMessageType.REPLY, seqid));
+        result.write(oprot);
+        oprot.writeMessageEnd();
+        oprot.getTransport().flush();
+      }
+
+    }
+
+    private class bulkGet implements ProcessFunction {
+      public void process(int seqid, TProtocol iprot, TProtocol oprot) throws TException
+      {
+        bulkGet_args args = new bulkGet_args();
+        try {
+          args.read(iprot);
+        } catch (TProtocolException e) {
+          iprot.readMessageEnd();
+          TApplicationException x = new TApplicationException(TApplicationException.PROTOCOL_ERROR, e.getMessage());
+          oprot.writeMessageBegin(new TMessage("bulkGet", TMessageType.EXCEPTION, seqid));
+          x.write(oprot);
+          oprot.writeMessageEnd();
+          oprot.getTransport().flush();
+          return;
+        }
+        iprot.readMessageEnd();
+        bulkGet_result result = new bulkGet_result();
+        result.success = iface_.bulkGet(args.keyList);
+        oprot.writeMessageBegin(new TMessage("bulkGet", TMessageType.REPLY, seqid));
         result.write(oprot);
         oprot.writeMessageEnd();
         oprot.getTransport().flush();
@@ -2264,6 +2457,1154 @@ public class TreapDBService {
 
   }
 
+  public static class bulkPut_args implements TBase<bulkPut_args, bulkPut_args._Fields>, java.io.Serializable, Cloneable   {
+    private static final TStruct STRUCT_DESC = new TStruct("bulkPut_args");
+
+    private static final TField KV_MAP_FIELD_DESC = new TField("kvMap", TType.MAP, (short)1);
+
+    public Map<String,ByteBuffer> kvMap;
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements TFieldIdEnum {
+      KV_MAP((short)1, "kvMap");
+
+      private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
+
+      static {
+        for (_Fields field : EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          case 1: // KV_MAP
+            return KV_MAP;
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final String _fieldName;
+
+      _Fields(short thriftId, String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public String getFieldName() {
+        return _fieldName;
+      }
+    }
+
+    // isset id assignments
+
+    public static final Map<_Fields, FieldMetaData> metaDataMap;
+    static {
+      Map<_Fields, FieldMetaData> tmpMap = new EnumMap<_Fields, FieldMetaData>(_Fields.class);
+      tmpMap.put(_Fields.KV_MAP, new FieldMetaData("kvMap", TFieldRequirementType.DEFAULT, 
+          new MapMetaData(TType.MAP, 
+              new FieldValueMetaData(TType.STRING), 
+              new FieldValueMetaData(TType.STRING))));
+      metaDataMap = Collections.unmodifiableMap(tmpMap);
+      FieldMetaData.addStructMetaDataMap(bulkPut_args.class, metaDataMap);
+    }
+
+    public bulkPut_args() {
+    }
+
+    public bulkPut_args(
+      Map<String,ByteBuffer> kvMap)
+    {
+      this();
+      this.kvMap = kvMap;
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public bulkPut_args(bulkPut_args other) {
+      if (other.isSetKvMap()) {
+        Map<String,ByteBuffer> __this__kvMap = new HashMap<String,ByteBuffer>();
+        for (Map.Entry<String, ByteBuffer> other_element : other.kvMap.entrySet()) {
+
+          String other_element_key = other_element.getKey();
+          ByteBuffer other_element_value = other_element.getValue();
+
+          String __this__kvMap_copy_key = other_element_key;
+
+          ByteBuffer __this__kvMap_copy_value = TBaseHelper.copyBinary(other_element_value);
+;
+
+          __this__kvMap.put(__this__kvMap_copy_key, __this__kvMap_copy_value);
+        }
+        this.kvMap = __this__kvMap;
+      }
+    }
+
+    public bulkPut_args deepCopy() {
+      return new bulkPut_args(this);
+    }
+
+    @Override
+    public void clear() {
+      this.kvMap = null;
+    }
+
+    public int getKvMapSize() {
+      return (this.kvMap == null) ? 0 : this.kvMap.size();
+    }
+
+    public void putToKvMap(String key, ByteBuffer val) {
+      if (this.kvMap == null) {
+        this.kvMap = new HashMap<String,ByteBuffer>();
+      }
+      this.kvMap.put(key, val);
+    }
+
+    public Map<String,ByteBuffer> getKvMap() {
+      return this.kvMap;
+    }
+
+    public bulkPut_args setKvMap(Map<String,ByteBuffer> kvMap) {
+      this.kvMap = kvMap;
+      return this;
+    }
+
+    public void unsetKvMap() {
+      this.kvMap = null;
+    }
+
+    /** Returns true if field kvMap is set (has been asigned a value) and false otherwise */
+    public boolean isSetKvMap() {
+      return this.kvMap != null;
+    }
+
+    public void setKvMapIsSet(boolean value) {
+      if (!value) {
+        this.kvMap = null;
+      }
+    }
+
+    public void setFieldValue(_Fields field, Object value) {
+      switch (field) {
+      case KV_MAP:
+        if (value == null) {
+          unsetKvMap();
+        } else {
+          setKvMap((Map<String,ByteBuffer>)value);
+        }
+        break;
+
+      }
+    }
+
+    public Object getFieldValue(_Fields field) {
+      switch (field) {
+      case KV_MAP:
+        return getKvMap();
+
+      }
+      throw new IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been asigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new IllegalArgumentException();
+      }
+
+      switch (field) {
+      case KV_MAP:
+        return isSetKvMap();
+      }
+      throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof bulkPut_args)
+        return this.equals((bulkPut_args)that);
+      return false;
+    }
+
+    public boolean equals(bulkPut_args that) {
+      if (that == null)
+        return false;
+
+      boolean this_present_kvMap = true && this.isSetKvMap();
+      boolean that_present_kvMap = true && that.isSetKvMap();
+      if (this_present_kvMap || that_present_kvMap) {
+        if (!(this_present_kvMap && that_present_kvMap))
+          return false;
+        if (!this.kvMap.equals(that.kvMap))
+          return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      return 0;
+    }
+
+    public int compareTo(bulkPut_args other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+      bulkPut_args typedOther = (bulkPut_args)other;
+
+      lastComparison = Boolean.valueOf(isSetKvMap()).compareTo(typedOther.isSetKvMap());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetKvMap()) {
+        lastComparison = TBaseHelper.compareTo(this.kvMap, typedOther.kvMap);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(TProtocol iprot) throws TException {
+      TField field;
+      iprot.readStructBegin();
+      while (true)
+      {
+        field = iprot.readFieldBegin();
+        if (field.type == TType.STOP) { 
+          break;
+        }
+        switch (field.id) {
+          case 1: // KV_MAP
+            if (field.type == TType.MAP) {
+              {
+                TMap _map0 = iprot.readMapBegin();
+                this.kvMap = new HashMap<String,ByteBuffer>(2*_map0.size);
+                for (int _i1 = 0; _i1 < _map0.size; ++_i1)
+                {
+                  String _key2;
+                  ByteBuffer _val3;
+                  _key2 = iprot.readString();
+                  _val3 = iprot.readBinary();
+                  this.kvMap.put(_key2, _val3);
+                }
+                iprot.readMapEnd();
+              }
+            } else { 
+              TProtocolUtil.skip(iprot, field.type);
+            }
+            break;
+          default:
+            TProtocolUtil.skip(iprot, field.type);
+        }
+        iprot.readFieldEnd();
+      }
+      iprot.readStructEnd();
+
+      // check for required fields of primitive type, which can't be checked in the validate method
+      validate();
+    }
+
+    public void write(TProtocol oprot) throws TException {
+      validate();
+
+      oprot.writeStructBegin(STRUCT_DESC);
+      if (this.kvMap != null) {
+        oprot.writeFieldBegin(KV_MAP_FIELD_DESC);
+        {
+          oprot.writeMapBegin(new TMap(TType.STRING, TType.STRING, this.kvMap.size()));
+          for (Map.Entry<String, ByteBuffer> _iter4 : this.kvMap.entrySet())
+          {
+            oprot.writeString(_iter4.getKey());
+            oprot.writeBinary(_iter4.getValue());
+          }
+          oprot.writeMapEnd();
+        }
+        oprot.writeFieldEnd();
+      }
+      oprot.writeFieldStop();
+      oprot.writeStructEnd();
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder("bulkPut_args(");
+      boolean first = true;
+
+      sb.append("kvMap:");
+      if (this.kvMap == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.kvMap);
+      }
+      first = false;
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws TException {
+      // check for required fields
+    }
+
+  }
+
+  public static class bulkPut_result implements TBase<bulkPut_result, bulkPut_result._Fields>, java.io.Serializable, Cloneable   {
+    private static final TStruct STRUCT_DESC = new TStruct("bulkPut_result");
+
+
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements TFieldIdEnum {
+;
+
+      private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
+
+      static {
+        for (_Fields field : EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final String _fieldName;
+
+      _Fields(short thriftId, String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public String getFieldName() {
+        return _fieldName;
+      }
+    }
+    public static final Map<_Fields, FieldMetaData> metaDataMap;
+    static {
+      Map<_Fields, FieldMetaData> tmpMap = new EnumMap<_Fields, FieldMetaData>(_Fields.class);
+      metaDataMap = Collections.unmodifiableMap(tmpMap);
+      FieldMetaData.addStructMetaDataMap(bulkPut_result.class, metaDataMap);
+    }
+
+    public bulkPut_result() {
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public bulkPut_result(bulkPut_result other) {
+    }
+
+    public bulkPut_result deepCopy() {
+      return new bulkPut_result(this);
+    }
+
+    @Override
+    public void clear() {
+    }
+
+    public void setFieldValue(_Fields field, Object value) {
+      switch (field) {
+      }
+    }
+
+    public Object getFieldValue(_Fields field) {
+      switch (field) {
+      }
+      throw new IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been asigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new IllegalArgumentException();
+      }
+
+      switch (field) {
+      }
+      throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof bulkPut_result)
+        return this.equals((bulkPut_result)that);
+      return false;
+    }
+
+    public boolean equals(bulkPut_result that) {
+      if (that == null)
+        return false;
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      return 0;
+    }
+
+    public int compareTo(bulkPut_result other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+      bulkPut_result typedOther = (bulkPut_result)other;
+
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(TProtocol iprot) throws TException {
+      TField field;
+      iprot.readStructBegin();
+      while (true)
+      {
+        field = iprot.readFieldBegin();
+        if (field.type == TType.STOP) { 
+          break;
+        }
+        switch (field.id) {
+          default:
+            TProtocolUtil.skip(iprot, field.type);
+        }
+        iprot.readFieldEnd();
+      }
+      iprot.readStructEnd();
+
+      // check for required fields of primitive type, which can't be checked in the validate method
+      validate();
+    }
+
+    public void write(TProtocol oprot) throws TException {
+      oprot.writeStructBegin(STRUCT_DESC);
+
+      oprot.writeFieldStop();
+      oprot.writeStructEnd();
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder("bulkPut_result(");
+      boolean first = true;
+
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws TException {
+      // check for required fields
+    }
+
+  }
+
+  public static class bulkGet_args implements TBase<bulkGet_args, bulkGet_args._Fields>, java.io.Serializable, Cloneable   {
+    private static final TStruct STRUCT_DESC = new TStruct("bulkGet_args");
+
+    private static final TField KEY_LIST_FIELD_DESC = new TField("keyList", TType.LIST, (short)1);
+
+    public List<String> keyList;
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements TFieldIdEnum {
+      KEY_LIST((short)1, "keyList");
+
+      private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
+
+      static {
+        for (_Fields field : EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          case 1: // KEY_LIST
+            return KEY_LIST;
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final String _fieldName;
+
+      _Fields(short thriftId, String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public String getFieldName() {
+        return _fieldName;
+      }
+    }
+
+    // isset id assignments
+
+    public static final Map<_Fields, FieldMetaData> metaDataMap;
+    static {
+      Map<_Fields, FieldMetaData> tmpMap = new EnumMap<_Fields, FieldMetaData>(_Fields.class);
+      tmpMap.put(_Fields.KEY_LIST, new FieldMetaData("keyList", TFieldRequirementType.DEFAULT, 
+          new ListMetaData(TType.LIST, 
+              new FieldValueMetaData(TType.STRING))));
+      metaDataMap = Collections.unmodifiableMap(tmpMap);
+      FieldMetaData.addStructMetaDataMap(bulkGet_args.class, metaDataMap);
+    }
+
+    public bulkGet_args() {
+    }
+
+    public bulkGet_args(
+      List<String> keyList)
+    {
+      this();
+      this.keyList = keyList;
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public bulkGet_args(bulkGet_args other) {
+      if (other.isSetKeyList()) {
+        List<String> __this__keyList = new ArrayList<String>();
+        for (String other_element : other.keyList) {
+          __this__keyList.add(other_element);
+        }
+        this.keyList = __this__keyList;
+      }
+    }
+
+    public bulkGet_args deepCopy() {
+      return new bulkGet_args(this);
+    }
+
+    @Override
+    public void clear() {
+      this.keyList = null;
+    }
+
+    public int getKeyListSize() {
+      return (this.keyList == null) ? 0 : this.keyList.size();
+    }
+
+    public java.util.Iterator<String> getKeyListIterator() {
+      return (this.keyList == null) ? null : this.keyList.iterator();
+    }
+
+    public void addToKeyList(String elem) {
+      if (this.keyList == null) {
+        this.keyList = new ArrayList<String>();
+      }
+      this.keyList.add(elem);
+    }
+
+    public List<String> getKeyList() {
+      return this.keyList;
+    }
+
+    public bulkGet_args setKeyList(List<String> keyList) {
+      this.keyList = keyList;
+      return this;
+    }
+
+    public void unsetKeyList() {
+      this.keyList = null;
+    }
+
+    /** Returns true if field keyList is set (has been asigned a value) and false otherwise */
+    public boolean isSetKeyList() {
+      return this.keyList != null;
+    }
+
+    public void setKeyListIsSet(boolean value) {
+      if (!value) {
+        this.keyList = null;
+      }
+    }
+
+    public void setFieldValue(_Fields field, Object value) {
+      switch (field) {
+      case KEY_LIST:
+        if (value == null) {
+          unsetKeyList();
+        } else {
+          setKeyList((List<String>)value);
+        }
+        break;
+
+      }
+    }
+
+    public Object getFieldValue(_Fields field) {
+      switch (field) {
+      case KEY_LIST:
+        return getKeyList();
+
+      }
+      throw new IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been asigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new IllegalArgumentException();
+      }
+
+      switch (field) {
+      case KEY_LIST:
+        return isSetKeyList();
+      }
+      throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof bulkGet_args)
+        return this.equals((bulkGet_args)that);
+      return false;
+    }
+
+    public boolean equals(bulkGet_args that) {
+      if (that == null)
+        return false;
+
+      boolean this_present_keyList = true && this.isSetKeyList();
+      boolean that_present_keyList = true && that.isSetKeyList();
+      if (this_present_keyList || that_present_keyList) {
+        if (!(this_present_keyList && that_present_keyList))
+          return false;
+        if (!this.keyList.equals(that.keyList))
+          return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      return 0;
+    }
+
+    public int compareTo(bulkGet_args other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+      bulkGet_args typedOther = (bulkGet_args)other;
+
+      lastComparison = Boolean.valueOf(isSetKeyList()).compareTo(typedOther.isSetKeyList());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetKeyList()) {
+        lastComparison = TBaseHelper.compareTo(this.keyList, typedOther.keyList);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(TProtocol iprot) throws TException {
+      TField field;
+      iprot.readStructBegin();
+      while (true)
+      {
+        field = iprot.readFieldBegin();
+        if (field.type == TType.STOP) { 
+          break;
+        }
+        switch (field.id) {
+          case 1: // KEY_LIST
+            if (field.type == TType.LIST) {
+              {
+                TList _list5 = iprot.readListBegin();
+                this.keyList = new ArrayList<String>(_list5.size);
+                for (int _i6 = 0; _i6 < _list5.size; ++_i6)
+                {
+                  String _elem7;
+                  _elem7 = iprot.readString();
+                  this.keyList.add(_elem7);
+                }
+                iprot.readListEnd();
+              }
+            } else { 
+              TProtocolUtil.skip(iprot, field.type);
+            }
+            break;
+          default:
+            TProtocolUtil.skip(iprot, field.type);
+        }
+        iprot.readFieldEnd();
+      }
+      iprot.readStructEnd();
+
+      // check for required fields of primitive type, which can't be checked in the validate method
+      validate();
+    }
+
+    public void write(TProtocol oprot) throws TException {
+      validate();
+
+      oprot.writeStructBegin(STRUCT_DESC);
+      if (this.keyList != null) {
+        oprot.writeFieldBegin(KEY_LIST_FIELD_DESC);
+        {
+          oprot.writeListBegin(new TList(TType.STRING, this.keyList.size()));
+          for (String _iter8 : this.keyList)
+          {
+            oprot.writeString(_iter8);
+          }
+          oprot.writeListEnd();
+        }
+        oprot.writeFieldEnd();
+      }
+      oprot.writeFieldStop();
+      oprot.writeStructEnd();
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder("bulkGet_args(");
+      boolean first = true;
+
+      sb.append("keyList:");
+      if (this.keyList == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.keyList);
+      }
+      first = false;
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws TException {
+      // check for required fields
+    }
+
+  }
+
+  public static class bulkGet_result implements TBase<bulkGet_result, bulkGet_result._Fields>, java.io.Serializable, Cloneable   {
+    private static final TStruct STRUCT_DESC = new TStruct("bulkGet_result");
+
+    private static final TField SUCCESS_FIELD_DESC = new TField("success", TType.LIST, (short)0);
+
+    public List<Pair> success;
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements TFieldIdEnum {
+      SUCCESS((short)0, "success");
+
+      private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
+
+      static {
+        for (_Fields field : EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          case 0: // SUCCESS
+            return SUCCESS;
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final String _fieldName;
+
+      _Fields(short thriftId, String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public String getFieldName() {
+        return _fieldName;
+      }
+    }
+
+    // isset id assignments
+
+    public static final Map<_Fields, FieldMetaData> metaDataMap;
+    static {
+      Map<_Fields, FieldMetaData> tmpMap = new EnumMap<_Fields, FieldMetaData>(_Fields.class);
+      tmpMap.put(_Fields.SUCCESS, new FieldMetaData("success", TFieldRequirementType.DEFAULT, 
+          new ListMetaData(TType.LIST, 
+              new StructMetaData(TType.STRUCT, Pair.class))));
+      metaDataMap = Collections.unmodifiableMap(tmpMap);
+      FieldMetaData.addStructMetaDataMap(bulkGet_result.class, metaDataMap);
+    }
+
+    public bulkGet_result() {
+    }
+
+    public bulkGet_result(
+      List<Pair> success)
+    {
+      this();
+      this.success = success;
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public bulkGet_result(bulkGet_result other) {
+      if (other.isSetSuccess()) {
+        List<Pair> __this__success = new ArrayList<Pair>();
+        for (Pair other_element : other.success) {
+          __this__success.add(new Pair(other_element));
+        }
+        this.success = __this__success;
+      }
+    }
+
+    public bulkGet_result deepCopy() {
+      return new bulkGet_result(this);
+    }
+
+    @Override
+    public void clear() {
+      this.success = null;
+    }
+
+    public int getSuccessSize() {
+      return (this.success == null) ? 0 : this.success.size();
+    }
+
+    public java.util.Iterator<Pair> getSuccessIterator() {
+      return (this.success == null) ? null : this.success.iterator();
+    }
+
+    public void addToSuccess(Pair elem) {
+      if (this.success == null) {
+        this.success = new ArrayList<Pair>();
+      }
+      this.success.add(elem);
+    }
+
+    public List<Pair> getSuccess() {
+      return this.success;
+    }
+
+    public bulkGet_result setSuccess(List<Pair> success) {
+      this.success = success;
+      return this;
+    }
+
+    public void unsetSuccess() {
+      this.success = null;
+    }
+
+    /** Returns true if field success is set (has been asigned a value) and false otherwise */
+    public boolean isSetSuccess() {
+      return this.success != null;
+    }
+
+    public void setSuccessIsSet(boolean value) {
+      if (!value) {
+        this.success = null;
+      }
+    }
+
+    public void setFieldValue(_Fields field, Object value) {
+      switch (field) {
+      case SUCCESS:
+        if (value == null) {
+          unsetSuccess();
+        } else {
+          setSuccess((List<Pair>)value);
+        }
+        break;
+
+      }
+    }
+
+    public Object getFieldValue(_Fields field) {
+      switch (field) {
+      case SUCCESS:
+        return getSuccess();
+
+      }
+      throw new IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been asigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new IllegalArgumentException();
+      }
+
+      switch (field) {
+      case SUCCESS:
+        return isSetSuccess();
+      }
+      throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof bulkGet_result)
+        return this.equals((bulkGet_result)that);
+      return false;
+    }
+
+    public boolean equals(bulkGet_result that) {
+      if (that == null)
+        return false;
+
+      boolean this_present_success = true && this.isSetSuccess();
+      boolean that_present_success = true && that.isSetSuccess();
+      if (this_present_success || that_present_success) {
+        if (!(this_present_success && that_present_success))
+          return false;
+        if (!this.success.equals(that.success))
+          return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      return 0;
+    }
+
+    public int compareTo(bulkGet_result other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+      bulkGet_result typedOther = (bulkGet_result)other;
+
+      lastComparison = Boolean.valueOf(isSetSuccess()).compareTo(typedOther.isSetSuccess());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetSuccess()) {
+        lastComparison = TBaseHelper.compareTo(this.success, typedOther.success);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(TProtocol iprot) throws TException {
+      TField field;
+      iprot.readStructBegin();
+      while (true)
+      {
+        field = iprot.readFieldBegin();
+        if (field.type == TType.STOP) { 
+          break;
+        }
+        switch (field.id) {
+          case 0: // SUCCESS
+            if (field.type == TType.LIST) {
+              {
+                TList _list9 = iprot.readListBegin();
+                this.success = new ArrayList<Pair>(_list9.size);
+                for (int _i10 = 0; _i10 < _list9.size; ++_i10)
+                {
+                  Pair _elem11;
+                  _elem11 = new Pair();
+                  _elem11.read(iprot);
+                  this.success.add(_elem11);
+                }
+                iprot.readListEnd();
+              }
+            } else { 
+              TProtocolUtil.skip(iprot, field.type);
+            }
+            break;
+          default:
+            TProtocolUtil.skip(iprot, field.type);
+        }
+        iprot.readFieldEnd();
+      }
+      iprot.readStructEnd();
+
+      // check for required fields of primitive type, which can't be checked in the validate method
+      validate();
+    }
+
+    public void write(TProtocol oprot) throws TException {
+      oprot.writeStructBegin(STRUCT_DESC);
+
+      if (this.isSetSuccess()) {
+        oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
+        {
+          oprot.writeListBegin(new TList(TType.STRUCT, this.success.size()));
+          for (Pair _iter12 : this.success)
+          {
+            _iter12.write(oprot);
+          }
+          oprot.writeListEnd();
+        }
+        oprot.writeFieldEnd();
+      }
+      oprot.writeFieldStop();
+      oprot.writeStructEnd();
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder("bulkGet_result(");
+      boolean first = true;
+
+      sb.append("success:");
+      if (this.success == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.success);
+      }
+      first = false;
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws TException {
+      // check for required fields
+    }
+
+  }
+
   public static class prefix_args implements TBase<prefix_args, prefix_args._Fields>, java.io.Serializable, Cloneable   {
     private static final TStruct STRUCT_DESC = new TStruct("prefix_args");
 
@@ -2883,14 +4224,14 @@ public class TreapDBService {
           case 0: // SUCCESS
             if (field.type == TType.LIST) {
               {
-                TList _list0 = iprot.readListBegin();
-                this.success = new ArrayList<Pair>(_list0.size);
-                for (int _i1 = 0; _i1 < _list0.size; ++_i1)
+                TList _list13 = iprot.readListBegin();
+                this.success = new ArrayList<Pair>(_list13.size);
+                for (int _i14 = 0; _i14 < _list13.size; ++_i14)
                 {
-                  Pair _elem2;
-                  _elem2 = new Pair();
-                  _elem2.read(iprot);
-                  this.success.add(_elem2);
+                  Pair _elem15;
+                  _elem15 = new Pair();
+                  _elem15.read(iprot);
+                  this.success.add(_elem15);
                 }
                 iprot.readListEnd();
               }
@@ -2916,9 +4257,9 @@ public class TreapDBService {
         oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
         {
           oprot.writeListBegin(new TList(TType.STRUCT, this.success.size()));
-          for (Pair _iter3 : this.success)
+          for (Pair _iter16 : this.success)
           {
-            _iter3.write(oprot);
+            _iter16.write(oprot);
           }
           oprot.writeListEnd();
         }
@@ -3480,14 +4821,14 @@ public class TreapDBService {
           case 0: // SUCCESS
             if (field.type == TType.LIST) {
               {
-                TList _list4 = iprot.readListBegin();
-                this.success = new ArrayList<Pair>(_list4.size);
-                for (int _i5 = 0; _i5 < _list4.size; ++_i5)
+                TList _list17 = iprot.readListBegin();
+                this.success = new ArrayList<Pair>(_list17.size);
+                for (int _i18 = 0; _i18 < _list17.size; ++_i18)
                 {
-                  Pair _elem6;
-                  _elem6 = new Pair();
-                  _elem6.read(iprot);
-                  this.success.add(_elem6);
+                  Pair _elem19;
+                  _elem19 = new Pair();
+                  _elem19.read(iprot);
+                  this.success.add(_elem19);
                 }
                 iprot.readListEnd();
               }
@@ -3513,9 +4854,9 @@ public class TreapDBService {
         oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
         {
           oprot.writeListBegin(new TList(TType.STRUCT, this.success.size()));
-          for (Pair _iter7 : this.success)
+          for (Pair _iter20 : this.success)
           {
-            _iter7.write(oprot);
+            _iter20.write(oprot);
           }
           oprot.writeListEnd();
         }
@@ -4077,14 +5418,14 @@ public class TreapDBService {
           case 0: // SUCCESS
             if (field.type == TType.LIST) {
               {
-                TList _list8 = iprot.readListBegin();
-                this.success = new ArrayList<Pair>(_list8.size);
-                for (int _i9 = 0; _i9 < _list8.size; ++_i9)
+                TList _list21 = iprot.readListBegin();
+                this.success = new ArrayList<Pair>(_list21.size);
+                for (int _i22 = 0; _i22 < _list21.size; ++_i22)
                 {
-                  Pair _elem10;
-                  _elem10 = new Pair();
-                  _elem10.read(iprot);
-                  this.success.add(_elem10);
+                  Pair _elem23;
+                  _elem23 = new Pair();
+                  _elem23.read(iprot);
+                  this.success.add(_elem23);
                 }
                 iprot.readListEnd();
               }
@@ -4110,9 +5451,9 @@ public class TreapDBService {
         oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
         {
           oprot.writeListBegin(new TList(TType.STRUCT, this.success.size()));
-          for (Pair _iter11 : this.success)
+          for (Pair _iter24 : this.success)
           {
-            _iter11.write(oprot);
+            _iter24.write(oprot);
           }
           oprot.writeListEnd();
         }
@@ -4852,14 +6193,14 @@ public class TreapDBService {
           case 0: // SUCCESS
             if (field.type == TType.LIST) {
               {
-                TList _list12 = iprot.readListBegin();
-                this.success = new ArrayList<Pair>(_list12.size);
-                for (int _i13 = 0; _i13 < _list12.size; ++_i13)
+                TList _list25 = iprot.readListBegin();
+                this.success = new ArrayList<Pair>(_list25.size);
+                for (int _i26 = 0; _i26 < _list25.size; ++_i26)
                 {
-                  Pair _elem14;
-                  _elem14 = new Pair();
-                  _elem14.read(iprot);
-                  this.success.add(_elem14);
+                  Pair _elem27;
+                  _elem27 = new Pair();
+                  _elem27.read(iprot);
+                  this.success.add(_elem27);
                 }
                 iprot.readListEnd();
               }
@@ -4885,9 +6226,9 @@ public class TreapDBService {
         oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
         {
           oprot.writeListBegin(new TList(TType.STRUCT, this.success.size()));
-          for (Pair _iter15 : this.success)
+          for (Pair _iter28 : this.success)
           {
-            _iter15.write(oprot);
+            _iter28.write(oprot);
           }
           oprot.writeListEnd();
         }
@@ -5538,14 +6879,14 @@ public class TreapDBService {
           case 0: // SUCCESS
             if (field.type == TType.LIST) {
               {
-                TList _list16 = iprot.readListBegin();
-                this.success = new ArrayList<Pair>(_list16.size);
-                for (int _i17 = 0; _i17 < _list16.size; ++_i17)
+                TList _list29 = iprot.readListBegin();
+                this.success = new ArrayList<Pair>(_list29.size);
+                for (int _i30 = 0; _i30 < _list29.size; ++_i30)
                 {
-                  Pair _elem18;
-                  _elem18 = new Pair();
-                  _elem18.read(iprot);
-                  this.success.add(_elem18);
+                  Pair _elem31;
+                  _elem31 = new Pair();
+                  _elem31.read(iprot);
+                  this.success.add(_elem31);
                 }
                 iprot.readListEnd();
               }
@@ -5571,9 +6912,9 @@ public class TreapDBService {
         oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
         {
           oprot.writeListBegin(new TList(TType.STRUCT, this.success.size()));
-          for (Pair _iter19 : this.success)
+          for (Pair _iter32 : this.success)
           {
-            _iter19.write(oprot);
+            _iter32.write(oprot);
           }
           oprot.writeListEnd();
         }
@@ -6224,14 +7565,14 @@ public class TreapDBService {
           case 0: // SUCCESS
             if (field.type == TType.LIST) {
               {
-                TList _list20 = iprot.readListBegin();
-                this.success = new ArrayList<Pair>(_list20.size);
-                for (int _i21 = 0; _i21 < _list20.size; ++_i21)
+                TList _list33 = iprot.readListBegin();
+                this.success = new ArrayList<Pair>(_list33.size);
+                for (int _i34 = 0; _i34 < _list33.size; ++_i34)
                 {
-                  Pair _elem22;
-                  _elem22 = new Pair();
-                  _elem22.read(iprot);
-                  this.success.add(_elem22);
+                  Pair _elem35;
+                  _elem35 = new Pair();
+                  _elem35.read(iprot);
+                  this.success.add(_elem35);
                 }
                 iprot.readListEnd();
               }
@@ -6257,9 +7598,9 @@ public class TreapDBService {
         oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
         {
           oprot.writeListBegin(new TList(TType.STRUCT, this.success.size()));
-          for (Pair _iter23 : this.success)
+          for (Pair _iter36 : this.success)
           {
-            _iter23.write(oprot);
+            _iter36.write(oprot);
           }
           oprot.writeListEnd();
         }

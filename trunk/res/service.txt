@@ -8,6 +8,8 @@ struct Pair {
 service	TreapDBService{
 	void put(1:string key, 2:binary value);
 	binary get(1:string key),
+	void bulkPut(1:map<string,binary> kvMap);
+	list<Pair> bulkGet(1:list<string> keyList);
 	list<Pair> prefix(1:string prefixStr,2:i32 limit),
 	list<Pair> kmax(1:i32 k),
 	list<Pair> kmin(1:i32 k),

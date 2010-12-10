@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TBinaryProtocol;
@@ -51,16 +52,22 @@ public class TreapDBBinaryProtocolServer implements Iface{
 		{
 			return ;
 		}
+		byte[] content = addLeadingFlags(value);
+		
+		treap.put(new FastString(key), content) ;
+		
+		//treap.put(key, value.array());
+	}
+
+	//加上4个字节的标志位
+	private byte[] addLeadingFlags(ByteBuffer value) {
 		byte[] maskFlags = new byte[]{0,0,0,0} ;
 		byte[] realvalue = value.array() ;
 		byte[] content = new byte[maskFlags.length + realvalue.length] ;
 		
 		System.arraycopy(maskFlags, 0, content, 0, maskFlags.length) ;
 		System.arraycopy(realvalue, 0, content, maskFlags.length, realvalue.length) ;
-		
-		treap.put(new FastString(key), content) ;
-		
-		//treap.put(key, value.array());
+		return content;
 	}
 
 	@Override
@@ -149,6 +156,25 @@ public class TreapDBBinaryProtocolServer implements Iface{
 			throws TException {
 		Map<FastString,byte[]> result = treap.after(new FastString(key), limit);
 		return byteArraytoBuffer(result);
+	}
+
+	@Override
+	public void bulkPut(Map<String, ByteBuffer> kvMap) throws TException {
+		Map<FastString,byte[]> kvpairs = new TreeMap<FastString, byte[]>();
+		for(Entry<String,ByteBuffer> e: kvMap.entrySet()){
+			kvpairs.put(new FastString(e.getKey()), addLeadingFlags(e.getValue()));
+		}
+		treap.bulkPut(kvpairs);
+	}
+
+	@Override
+	public List<Pair> bulkGet(List<String> keyList) throws TException {
+		List<FastString> fstrList = new ArrayList<FastString>();
+		for(String s: keyList){
+			fstrList.add(new FastString(s));
+		}
+		Map<FastString,byte[] > result = treap.bulkGet(fstrList);
+		return byteArraytoBuffer(result); 
 	}
 
 	

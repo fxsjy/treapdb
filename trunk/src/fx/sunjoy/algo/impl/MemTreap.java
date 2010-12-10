@@ -1,6 +1,7 @@
 package fx.sunjoy.algo.impl;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -252,4 +253,18 @@ public class MemTreap<K extends Comparable<K>,V> implements ITreap<K, V>  {
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+	@Override
+	public Map<K,V> bulkGet(List<K> keys) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void bulkPut(Map<K, V> pairs) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	
 }
