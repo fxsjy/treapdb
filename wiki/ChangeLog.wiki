@@ -1,4 +1,12 @@
 #summary One-sentence summary of this page.
+==Version2.0 Beta1==
+    *master-slave replication supported.
+    *unit test added
+    *a client shell to learn TerapDB easily.
+    *two new operations: "before" & "after"
+    *the performance of these operations improved: "kmin","kmax","range","prefix".
+    *many thanks to Ma Qiang
+
 ==Version2.0 Alpha1==
     * merge two servers to one TreapDB server, which can talk both thrfit and memcache at the same time.
     * use XML to configure server parameters
