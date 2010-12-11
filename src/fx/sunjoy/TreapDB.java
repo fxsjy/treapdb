@@ -36,7 +36,7 @@ public class TreapDB {
 		}
 		
 		int index_block_size = params.getIndexBlockSize() ;
-		long mmap_size = params.getMmapSize() << 20 ; 
+		long mmap_size = (long)params.getMmapSize() << 20 ; //不加long会溢出为负数
 		
 		final int textport = params.getTextPort() ;
 		final int thriftport = params.getThriftPort() ;
