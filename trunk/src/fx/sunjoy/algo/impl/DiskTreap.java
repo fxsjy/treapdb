@@ -655,25 +655,40 @@ public class DiskTreap<K extends Comparable<K>,V extends Serializable> implement
 				this.blockUtil.writeNode(startNode, currentNode, true);
 			}
 			
-			currentNode.rNo = bulkInsert(currentNode.rNo,pairs.tailMap(currentNode.key,false));
+			NavigableMap<K, V> rightPart = pairs.tailMap(currentNode.key,false);
+			NavigableMap<K, V> leftPart = pairs.headMap(currentNode.key, false);
+			
+			int rfix = Integer.MAX_VALUE;
+			int lfix = Integer.MAX_VALUE;
+			
+			currentNode.rNo = bulkInsert(currentNode.rNo, rightPart);
 			if(currentNode.rNo!=-1){
 				DiskTreapNode<K, V> rightNode = this.blockUtil.readNode(currentNode.rNo, false);
 				currentNode.r_size = rightNode.r_size+1+rightNode.l_size;
-				if(rightNode.fix < currentNode.fix){
-					startNode = rotateLeft(oldNode);
-				}
+				rfix = rightNode.fix;
 			}
 			
-			currentNode.lNo = bulkInsert(currentNode.lNo,pairs.headMap(currentNode.key, false));
+			
+			currentNode.lNo = bulkInsert(currentNode.lNo,leftPart);
 			if(currentNode.lNo!=-1){
 				DiskTreapNode< K, V> leftNode = this.blockUtil.readNode(currentNode.lNo, false);
 				currentNode.l_size = leftNode.l_size+1+leftNode.r_size;
-				if(leftNode.fix < currentNode.fix){
-					startNode = rotateRight(oldNode);
-				}
+				lfix = leftNode.fix;
 			}
-
 			this.blockUtil.writeNode(oldNode, currentNode, false);
+			
+			if(rfix<lfix){
+				if(rfix<currentNode.fix)
+					startNode = rotateLeft(oldNode);
+				if(lfix<currentNode.fix)
+					rotateRight(oldNode);
+			}else{
+				if(lfix<currentNode.fix)
+					startNode = rotateRight(oldNode);
+				if(rfix<currentNode.fix)
+					rotateLeft(oldNode);
+			}
+			
 			return startNode;
 		}
 	}

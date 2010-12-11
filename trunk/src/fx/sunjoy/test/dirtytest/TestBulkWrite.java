@@ -26,7 +26,7 @@ public class TestBulkWrite {
 		for(int i=0;i<1000001;i++){
 			Integer key = (int) (Math.random()*Integer.MAX_VALUE);
 			writeBuffer.put(new FastString("thing"+String.format("%010d", key)), buf.array());
-			if(i%5000==0){
+			if(i%10000==0){
 				treap.bulkPut(writeBuffer);
 				writeBuffer.clear();
 			}
