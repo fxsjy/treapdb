@@ -10,7 +10,7 @@ public class TestTreapDBCSmall {
 		ByteBuffer buf = ByteBuffer.allocate(10000);
 		for(int i=0;i<10000;i++){buf.put((byte)'x');};
 		buf.flip();
-		TreapDBClient client = TreapDBClientFactory.getClient("localhost", 11811);
+		TreapDBClient client = TreapDBClientFactory.getClient("localhost", 11812);
 		long t1 = System.currentTimeMillis();
 		for(int i=0;i<1000000;i++){
 			//Integer key = (int) (Math.random()*Integer.MAX_VALUE);
