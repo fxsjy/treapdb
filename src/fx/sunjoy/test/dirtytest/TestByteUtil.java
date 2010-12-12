@@ -22,12 +22,13 @@ public class TestByteUtil {
 		byte[] block = Arrays.copyOf(nodeBytes, 440);
 		System.out.println(ByteUtil.xgetObjectFromBytes(block));
 		System.out.println(ByteUtil.xgetBytesFromObject(new DiskTreapHeader()).length);*/
-		long t1 = System.currentTimeMillis();
+		/*long t1 = System.currentTimeMillis();
 		for(int i=0;i<10000000;i++){
 			node.key = new FastString("thing"+i+"");
 			ByteUtil.dumps(node,64);
 		}
-		System.out.println(System.currentTimeMillis()-t1);
+		System.out.println(System.currentTimeMillis()-t1);*/
+		System.out.println(ByteUtil.dumpV("abcd".getBytes()).length);
 	}
 
 }
