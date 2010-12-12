@@ -256,14 +256,18 @@ public class BlockUtil<K extends Comparable<K>,V extends Serializable> {
 	
 	@SuppressWarnings("unchecked")
 	public void filleNodeValue(DiskTreapNode<K,V> node) throws Exception{
-		File dataFileName = new File(indexFileName + ".data"
-				+ node.valueFile);
-		FileChannel dataFile = getReadDataFile(dataFileName
-				.getAbsolutePath());
-		iocounter++;
-		ByteBuffer valueBytes = xgetBytesN(dataFile,node.valuePtr, node.valueLen);
-		node.value = (V)ByteUtil.loadV_MS(valueBytes.array()) ;//(V) ByteUtil.loadV(valueBytes.array());
-		valueBytes = null;
+		if(node.valueFile!=-1){
+			File dataFileName = new File(indexFileName + ".data"
+					+ node.valueFile);
+			FileChannel dataFile = getReadDataFile(dataFileName
+					.getAbsolutePath());
+			iocounter++;
+			ByteBuffer valueBytes = xgetBytesN(dataFile,node.valuePtr, node.valueLen);
+			node.value = (V)ByteUtil.loadV_MS(valueBytes.array()) ;//(V) ByteUtil.loadV(valueBytes.array());
+			valueBytes = null;
+		}else{
+			node.value = (V)ConvertUtil.long2Bytes(node.valuePtr,node.valueLen);
+		}
 	}
 	
 	
@@ -280,15 +284,20 @@ public class BlockUtil<K extends Comparable<K>,V extends Serializable> {
 		DiskTreapNode<K, V> node = (DiskTreapNode<K, V>) ByteUtil.loads(block);
 		block = null;
 		if (loadValue) {
-			File dataFileName = new File(indexFileName + ".data"
-					+ node.valueFile);
-			FileChannel dataFile = getReadDataFile(dataFileName
-					.getAbsolutePath());
-			iocounter++;
-			ByteBuffer valueBytes = xgetBytesN(dataFile,node.valuePtr, node.valueLen);
-			//node.value = (V) ByteUtil.loadV(valueBytes.array());
-			node.value = (V)ByteUtil.loadV_MS(valueBytes.array()) ;
-			valueBytes = null;
+			if(node.valueFile!=-1){
+				File dataFileName = new File(indexFileName + ".data"
+						+ node.valueFile);
+				FileChannel dataFile = getReadDataFile(dataFileName
+						.getAbsolutePath());
+				iocounter++;
+				ByteBuffer valueBytes = xgetBytesN(dataFile,node.valuePtr, node.valueLen);
+				//node.value = (V) ByteUtil.loadV(valueBytes.array());
+				node.value = (V)ByteUtil.loadV_MS(valueBytes.array()) ;
+				valueBytes = null;
+			}else{
+				node.value = (V)ConvertUtil.long2Bytes(node.valuePtr,node.valueLen);
+				//如果是小对象，不读数据文件了，直接从“借用”索引的地方保存
+			}
 		}
 		if (node.value == null)
 			nodeCache.put(pos, node);
@@ -307,8 +316,9 @@ public class BlockUtil<K extends Comparable<K>,V extends Serializable> {
 		if(changeValue){
 			//byte[] byteValue = ByteUtil.dumpV(node.value);
 			byte[] byteValue = ByteUtil.dumpV_MS(node.key, node.value) ;
-			node.value = null;
-
+			
+			if(node.valueFile==-1) node.valueFile=0;//忽略之前的影响
+			
 			File dataFileName = new File(indexFileName+".data"+node.valueFile);
 			ensureFileExists(dataFileName);
 			FileChannel dataFile = getDataFile(dataFileName.getAbsolutePath());
@@ -327,7 +337,15 @@ public class BlockUtil<K extends Comparable<K>,V extends Serializable> {
 			node.valueLen = byteValue.length;
 			byteValue = null;
 			
-			dataFileNO.set(node.valueFile + 1) ;
+			//如果是小对象，不记录文件指针了，直接从“借用”索引的地方保存
+			if(node.value instanceof byte[] && ((byte[])node.value).length<=8){
+				node.valueFile = -1;
+				node.valueLen = ((byte[])node.value).length;
+				node.valuePtr = ConvertUtil.byte2Long((byte[])node.value);
+			}
+			node.value = null;
+			if(node.valueFile>=0)
+				dataFileNO.set(node.valueFile + 1) ;
 			currentFilePos.set(dataFile.size()) ;
 		}
 		

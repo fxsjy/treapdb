@@ -7,10 +7,10 @@ import java.util.Map;
 import fx.sunjoy.client.TreapDBClient;
 import fx.sunjoy.client.TreapDBClientFactory;
 
-public class TestTreapDBClientBulkPut {
+public class TestTreapDBClientBulkPutSmallValue {
 	public static void main(String[] args) throws Exception {
 		ByteBuffer buf = ByteBuffer.allocate(100);
-		for(int i=0;i<100;i++){buf.put((byte)'x');};
+		buf.put(new String("abcd").getBytes());
 		buf.flip();
 		
 		String host ="localhost";

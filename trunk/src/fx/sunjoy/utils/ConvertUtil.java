@@ -1,5 +1,7 @@
 package fx.sunjoy.utils;
 
+import java.nio.ByteBuffer;
+
 public class ConvertUtil {
 	
 	public static byte[] int2byte(int value)
@@ -19,6 +21,21 @@ public class ConvertUtil {
 		| ((value[2] << 24) >>> 8) | (value[3] << 24); 
 		
 		return result; 
+	}
+
+	public static long byte2Long(byte[] value) {
+		ByteBuffer buf = ByteBuffer.allocate(8);
+		buf.put(value);
+		buf.position(0);
+		return buf.getLong();
 	} 
 
+	public static byte[] long2Bytes(Long value,int vLen){
+		byte[] dest = new byte[vLen];
+		ByteBuffer buf = ByteBuffer.allocate(8);
+		buf.putLong(value);
+		buf.flip();
+		buf.get(dest);
+		return dest;
+	}
 }
