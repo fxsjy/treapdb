@@ -4,6 +4,7 @@
     * value less than 4Bytes(e.g. Integer) has a copy in index file, no file seek needed.
       (therefore, the performance of "prefix","range",etc. is improved very much)
     * a bug in x64 architecture fixed.
+    * 2010-12-12
 
 ==Version2.0 Beta1==
     * master-slave replication supported.
