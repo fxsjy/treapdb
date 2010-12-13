@@ -1,8 +1,10 @@
 package fx.sunjoy.test.unittest;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import junit.framework.TestCase;
@@ -348,6 +350,39 @@ public class BaseTreapDBTest extends TestCase {
 		File strKeyIndexFile = prepareDataStringKey();
 		DiskTreap<String, Integer> strKeyIndex = new DiskTreap<String, Integer>(strKeyIndexFile);
 		assertEquals(strKeyIndex.length()	, 4);
+		strKeyIndex.close();
+	}
+	
+	public void testBulkPrefix() throws Exception{
+		File indexFile = new File("tmp/bulk_prefix");
+		indexFile.delete();
+		DiskTreap<FastString, String> index = new DiskTreap<FastString, String>(indexFile);
+		for(int i=0;i<1000;i++){
+			for(int j=0;j<10;j++){
+				index.put(new FastString("user"+i+":"+j), "hello");
+			}
+		}
+		List<String> prefixList = new ArrayList<String>();
+		prefixList.add("user1:");
+		prefixList.add("user7:");
+		prefixList.add("user8:");
+		//long t1 = System.currentTimeMillis();
+		//System.out.println(index.bulkPrefix(prefixList, 2, null, false));
+		//index.prefix(new FastString("user1:"),30);
+		//System.out.println(System.currentTimeMillis()-t1);
+		assertEquals(
+				"{user8:9=hello, user8:8=hello, user7:9=hello, user7:8=hello, user1:9=hello, user1:8=hello}",
+				index.bulkPrefix(prefixList, 2, null, false).toString());
+		//System.out.println(index.bulkPrefix(prefixList, 3, null, true));
+		assertEquals(
+				"{user1:0=hello, user1:1=hello, user1:2=hello, user7:0=hello, user7:1=hello, user7:2=hello, user8:0=hello, user8:1=hello, user8:2=hello}",
+				index.bulkPrefix(prefixList, 3, null, true).toString());
+		//System.out.println(index.bulkPrefix(prefixList, 3,new FastString("user8:9"),false));
+		assertEquals(
+				"{user8:9=hello, user8:8=hello, user8:7=hello, user7:9=hello, user7:8=hello, user7:7=hello, user1:9=hello, user1:8=hello, user1:7=hello}",
+				index.bulkPrefix(prefixList, 3, new FastString("user8:9"),
+						false).toString());
+		index.close();
 	}
 	
 }

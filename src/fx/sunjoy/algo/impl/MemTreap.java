@@ -80,7 +80,7 @@ public class MemTreap<K extends Comparable<K>,V> implements ITreap<K, V>  {
 	}
 	
 	@Override
-	public Map<K,V> prefix(K prefixString,int limit){
+	public Map<K,V> prefix(K prefixString,int limit,K startK,boolean asc){
 		Map<K,V> results = new TreeMap<K,V>();
 		prefixSearch(this.rootNo,prefixString,results);
 		return results;
@@ -264,6 +264,13 @@ public class MemTreap<K extends Comparable<K>,V> implements ITreap<K, V>  {
 	public void bulkPut(Map<K, V> pairs) {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	public Map<K, V> bulkPrefix(List<String> prefixList, int limit, K startK,
+			boolean asc) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	

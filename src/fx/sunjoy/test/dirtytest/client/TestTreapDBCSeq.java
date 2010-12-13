@@ -27,7 +27,7 @@ public class TestTreapDBCSeq {
 			if(i%100==0)
 				System.out.println("geting:"+i);
 		}
-		List<Pair> results = client.prefix("thing", 100);
+		List<Pair> results = client.prefix("thing", 100,null,true);
 		for(Pair e: results){
 			System.out.println(e.getKey()+":"+new String(e.getValue()));
 		}

@@ -71,7 +71,7 @@ public class TestDiskTreap {
 		}
 		
 		System.out.println("====prefix search====");
-		Map<String,Integer> result2 = treap2.prefix("123",5);
+		Map<String,Integer> result2 = treap2.prefix("123",5,"1239881542",false);
 		for(Entry<String,Integer> e : result2.entrySet()){
 			System.out.println("key:"+e.getKey()+",value:"+e.getValue());
 		}
