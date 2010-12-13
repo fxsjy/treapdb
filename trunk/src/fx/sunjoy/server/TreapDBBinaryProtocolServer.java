@@ -82,7 +82,7 @@ public class TreapDBBinaryProtocolServer implements Iface{
 		//return ByteBuffer.wrap(result);
 	}
 	
-	private List<Pair> byteArraytoBuffer(Map<FastString, byte[]> r1) {
+	private List<Pair> mapToList(Map<FastString, byte[]> r1) {
 		List<Pair> r2 = new ArrayList<Pair>();
 		for(Entry<FastString,byte[]> e: r1.entrySet()){
 			byte[] realvalue = new byte[e.getValue().length - 4] ;
@@ -94,30 +94,32 @@ public class TreapDBBinaryProtocolServer implements Iface{
 	}
 
 	@Override
-	public List<Pair> prefix(String prefixStr, int limit)
+	public List<Pair> prefix(String prefixStr, int limit,String startK, boolean asc)
 			throws TException {
-		Map<FastString,byte[]> result = treap.prefix(new FastString(prefixStr), limit);
-		return byteArraytoBuffer(result);
+		FastString fastK = null;
+		if(startK!=null)fastK = new FastString(startK);
+		Map<FastString,byte[]> result = treap.prefix(new FastString(prefixStr), limit,fastK,asc);
+		return mapToList(result);
 	}
 
 
 	@Override
 	public List<Pair> kmax(int k) throws TException {
 		Map<FastString,byte[]> result = treap.kmax(k);
-		return byteArraytoBuffer(result);
+		return mapToList(result);
 	}
 
 	@Override
 	public List<Pair> kmin(int k) throws TException {
 		Map<FastString,byte[]> result = treap.kmin(k);
-		return byteArraytoBuffer(result);
+		return mapToList(result);
 	}
 
 	@Override
 	public List<Pair> range(String kStart, String kEnd, int limit)
 			throws TException {
 		Map<FastString,byte[]> result = treap.range(new FastString(kStart), new FastString(kEnd), limit);
-		return byteArraytoBuffer(result);
+		return mapToList(result);
 	}
 
 	@Override
@@ -148,14 +150,14 @@ public class TreapDBBinaryProtocolServer implements Iface{
 	public List<Pair> before(String key, int limit)
 			throws TException {
 		Map<FastString,byte[]> result = treap.before(new FastString(key), limit);
-		return byteArraytoBuffer(result);
+		return mapToList(result);
 	}
 
 	@Override
 	public List<Pair> after(String key, int limit)
 			throws TException {
 		Map<FastString,byte[]> result = treap.after(new FastString(key), limit);
-		return byteArraytoBuffer(result);
+		return mapToList(result);
 	}
 
 	@Override
@@ -174,7 +176,16 @@ public class TreapDBBinaryProtocolServer implements Iface{
 			fstrList.add(new FastString(s));
 		}
 		Map<FastString,byte[] > result = treap.bulkGet(fstrList);
-		return byteArraytoBuffer(result); 
+		return mapToList(result); 
+	}
+
+	@Override
+	public List<Pair> bulkPrefix(List<String> prefixList, int limit,
+			String startK, boolean asc) throws TException {
+		FastString fastK = null;
+		if(startK!=null) fastK = new FastString(startK);
+		Map<FastString,byte[] > result = treap.bulkPrefix(prefixList, limit, fastK, asc);
+		return mapToList(result);
 	}
 
 	

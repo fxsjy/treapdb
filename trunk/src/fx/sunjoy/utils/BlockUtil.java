@@ -275,6 +275,7 @@ public class BlockUtil<K extends Comparable<K>,V extends Serializable> {
 	@SuppressWarnings("unchecked")
 	public DiskTreapNode<K,V>  readNode(int pos,boolean loadValue) throws Exception {
 		DiskTreapNode<K,V>  tmp;
+		//System.out.println(">>"+nodeCache);
 		if(!loadValue &&  (tmp= nodeCache.get(pos))!=null){
 			return tmp;
 		}
@@ -301,6 +302,7 @@ public class BlockUtil<K extends Comparable<K>,V extends Serializable> {
 		}
 		if (node.value == null)
 			nodeCache.put(pos, node);
+		//System.out.println("<<"+nodeCache);
 		return node;
 	}
 	

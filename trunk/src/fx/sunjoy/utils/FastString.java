@@ -4,13 +4,35 @@ public class FastString implements Comparable<FastString> {
 
 	public final byte[] bytes;
 	
+	private String backString ;
 	public FastString(String originalStr){
 		bytes = originalStr.getBytes();
+		this.backString = new String(bytes);
 		originalStr = null;
 	}
 	
 	public FastString(byte[] bb){
 		bytes = bb;
+		this.backString = new String(bytes);
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if(obj==null)return false;
+		if(obj==this)return true;
+		if(obj instanceof FastString){
+			return compareTo((FastString)obj)==0;
+		}
+		else if(obj instanceof String){
+			return this.backString.equals(obj);
+		}
+		return false;
+	}
+	
+	@Override
+	public int hashCode() {
+		// TODO Auto-generated method stub
+		return this.backString.hashCode();
 	}
 	
 	@Override
@@ -34,6 +56,6 @@ public class FastString implements Comparable<FastString> {
 
 	@Override
 	public String toString() {
-		return new String(bytes);
+		return backString;
 	}
 }

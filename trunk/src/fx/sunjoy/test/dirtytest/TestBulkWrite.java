@@ -11,7 +11,7 @@ import fx.sunjoy.utils.FastString;
 
 public class TestBulkWrite {
 	public static void main(String[] args) throws Exception {
-		String path = "c:/test/treapdb";
+		String path = "H:/test/treapdb";
 		if(args.length>0){
 			path = args[0];
 		}

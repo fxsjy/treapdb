@@ -3,6 +3,7 @@ package fx.sunjoy.algo.impl;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -130,7 +131,7 @@ public class DiskTreap<K extends Comparable<K>,V extends Serializable> implement
 	public Map<K,V> range(K start, K end,int limit) {
 		lock.readLock().lock();
 		try {
-			Map<K,V> result = new TreeMap<K, V>();
+			Map<K,V> result = new LinkedHashMap<K, V>();
 			DiskTreapHeader header = this.blockUtil.readHeader();
 			collectRange(header.rootNo, start, end, result,limit);
 			return result;
@@ -147,7 +148,7 @@ public class DiskTreap<K extends Comparable<K>,V extends Serializable> implement
 	public Map<K,V> kmin(int k){
 		lock.readLock().lock();
 		try {
-			Map<K,V> result = new TreeMap<K, V>();
+			Map<K,V> result = new LinkedHashMap<K, V>();
 			DiskTreapHeader header = this.blockUtil.readHeader();
 			if(k>header.size)k=header.size;
 			if(k<0)k=0;
@@ -163,7 +164,7 @@ public class DiskTreap<K extends Comparable<K>,V extends Serializable> implement
 	public Map<K,V> kmax(int k){
 		lock.readLock().lock();
 		try {
-			Map<K,V> result = new TreeMap<K, V>();
+			Map<K,V> result = new LinkedHashMap<K, V>();
 			DiskTreapHeader header = this.blockUtil.readHeader();
 			if(k>header.size)k=header.size;
 			if(k<0)k=0;
@@ -357,13 +358,16 @@ public class DiskTreap<K extends Comparable<K>,V extends Serializable> implement
 		return startNode;
 	}
 
-	//前缀搜索
 	public Map<K,V> prefix(K prefixString,int limit) {
+		return prefix(prefixString,limit,null,true);
+	}
+	//前缀搜索
+	public Map<K,V> prefix(K prefixString,int limit,K startK,boolean asc) {
 		lock.readLock().lock();
 		try {
-			Map<K,V> results = new TreeMap<K,V>();
+			Map<K,V> results = new LinkedHashMap<K,V>();
 			DiskTreapHeader header = this.blockUtil.readHeader();
-			prefixSearch(header.rootNo,prefixString,results,limit);
+			prefixSearch(header.rootNo,prefixString,results,limit,startK,asc);
 			return results;
 		} catch (Exception e) {
 			throw new RuntimeException(e);
@@ -372,22 +376,52 @@ public class DiskTreap<K extends Comparable<K>,V extends Serializable> implement
 		}
 	}
 	
-	private void prefixSearch(int startNode, K prefixString,Map<K,V> results,int limit) throws Exception {
+	/**
+	 * 
+	 * @param startNode 搜索起始的节点
+	 * @param prefixString 前缀串
+	 * @param results 结果搜集容器
+	 * @param limit   限制，最大收集量
+	 * @param startK  从startK以后开始收集
+	 * @param asc     顺序还是逆序
+	 * @throws Exception
+	 */
+	private void prefixSearch(int startNode, K prefixString,Map<K,V> results,int limit,K startK,boolean asc) throws Exception {
 		if(startNode==-1)return ;
 		if(results.size()>=limit)return;
 		DiskTreapNode<K, V> cur = this.blockUtil.readNode(startNode, false);
+		
+		if(startK!=null){
+			int cp = cur.key.compareTo(startK);
+			if(cp<0 && asc){
+				prefixSearch(cur.rNo, prefixString,results,limit,startK,asc);
+				return;
+			}
+			if(cp>0 && !asc){
+				prefixSearch(cur.lNo, prefixString,results,limit,startK,asc);
+				return;
+			}
+		}
 		if(prefixString.compareTo(cur.key)<=0){
 			if(isPrefixString(prefixString.toString(),cur.key.toString())){
-				prefixSearch(cur.lNo, prefixString,results,limit);
-				if(results.size()>=limit)return;
-				this.blockUtil.filleNodeValue(cur);
-				results.put(cur.key, cur.value);
-				prefixSearch(cur.rNo, prefixString,results,limit);
+				if(asc){
+					prefixSearch(cur.lNo, prefixString,results,limit,startK,asc);
+					if(results.size()>=limit)return;
+					this.blockUtil.filleNodeValue(cur);
+					results.put(cur.key, cur.value);
+					prefixSearch(cur.rNo, prefixString,results,limit,startK,asc);
+				}else{
+					prefixSearch(cur.rNo, prefixString,results,limit,startK,asc);
+					if(results.size()>=limit)return;
+					this.blockUtil.filleNodeValue(cur);
+					results.put(cur.key, cur.value);
+					prefixSearch(cur.lNo, prefixString,results,limit,startK,asc);
+				}
 			}else{
-				prefixSearch(cur.lNo, prefixString,results,limit);
+				prefixSearch(cur.lNo, prefixString,results,limit,startK,asc);
 			}
 		}else{
-			prefixSearch(cur.rNo, prefixString,results,limit);
+			prefixSearch(cur.rNo, prefixString,results,limit,startK,asc);
 		}
 	}
 	
@@ -508,7 +542,7 @@ public class DiskTreap<K extends Comparable<K>,V extends Serializable> implement
 	public Map<K, V> before(K key, int limit) {
 		lock.readLock().lock();
 		try {
-			Map<K,V> results = new TreeMap<K,V>();
+			Map<K,V> results = new LinkedHashMap<K,V>();
 			DiskTreapHeader header = this.blockUtil.readHeader();
 			prevSearch(header.rootNo,key,results,limit);
 			return results;
@@ -545,7 +579,7 @@ public class DiskTreap<K extends Comparable<K>,V extends Serializable> implement
 	public Map<K, V> after(K key, int limit) {
 		lock.readLock().lock();
 		try {
-			Map<K,V> results = new TreeMap<K,V>();
+			Map<K,V> results = new LinkedHashMap<K,V>();
 			DiskTreapHeader header = this.blockUtil.readHeader();
 			nextSearch(header.rootNo,key,results,limit);
 			return results;
@@ -690,6 +724,93 @@ public class DiskTreap<K extends Comparable<K>,V extends Serializable> implement
 			}
 			
 			return startNode;
+		}
+	}
+
+	@Override
+	public Map<K, V> bulkPrefix(List<String> prefixList, int limit, K startK,
+			boolean asc) {
+		lock.readLock().lock();
+		try {
+			Map<K,V> result = new LinkedHashMap<K,V>();
+			TreeSet<String> keySet = new TreeSet<String>(prefixList);
+			Map<String,Integer> counter = new TreeMap<String, Integer>();
+			DiskTreapHeader header = this.blockUtil.readHeader();
+			for(String p : prefixList){
+				counter.put(p, 0);
+			}
+			realBulkPrefix(header.rootNo,keySet,result,limit,startK,asc,counter);
+			return result;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}finally{
+			lock.readLock().unlock();
+		}
+	}
+
+	
+	private void realBulkPrefix(int startNode, TreeSet<String> keySet,
+			Map<K, V> result, int limit, K startK, boolean asc,Map<String,Integer> counter) throws Exception {
+		if(startNode==-1 || keySet.isEmpty())return;
+		
+		DiskTreapNode<K, V> cur  = this.blockUtil.readNode(startNode, false);
+		String strKey = cur.key.toString();
+		NavigableSet<String> lessPart = keySet.headSet(strKey, true);
+		NavigableSet<String> greaterPart = keySet.tailSet(strKey, false);
+		TreeSet<String> left = new TreeSet<String>();
+		TreeSet<String> middle = new TreeSet<String>();
+		TreeSet<String> right;
+		
+		for(String p: lessPart){
+			if(isPrefixString(p, strKey)){
+				middle.add(p);
+			}else{
+				left.add(p);
+			}
+		}
+		
+		right = new TreeSet<String>(greaterPart);
+		if(asc){//顺序
+			if(startK!=null && startK.compareTo(cur.key)>0){
+				realBulkPrefix(cur.rNo,keySet,result,limit,startK,asc,counter);
+				return;
+			}
+			realBulkPrefix(cur.lNo,left,result,limit,startK,asc,counter);
+			realBulkPrefix(cur.lNo,middle,result,limit,startK,asc,counter);
+			if(middle.size()>0){
+				for(String prfix: middle){
+					counter.put(prfix, counter.get(prfix)+1);
+					if(counter.get(prfix)<=limit){
+						this.blockUtil.filleNodeValue(cur);
+						result.put(cur.key, cur.value);
+					}else{
+						middle.remove(prfix);
+					}
+				}
+			}
+			realBulkPrefix(cur.rNo,middle,result,limit,startK,asc,counter);
+			realBulkPrefix(cur.rNo,right,result,limit,startK,asc,counter);
+		}else{//逆序
+			if(startK!=null && startK.compareTo(cur.key)<0){
+				realBulkPrefix(cur.lNo,keySet,result,limit,startK,asc,counter);
+				return;
+			}
+			realBulkPrefix(cur.rNo,right,result,limit,startK,asc,counter);
+			realBulkPrefix(cur.rNo,middle,result,limit,startK,asc,counter);
+			if(middle.size()>0){
+				for(String prfix: middle){
+					counter.put(prfix, counter.get(prfix)+1);
+					if(counter.get(prfix)<=limit){
+						this.blockUtil.filleNodeValue(cur);
+						result.put(cur.key, cur.value);
+					}else{
+						middle.remove(prfix);
+					}
+				}
+			}
+			realBulkPrefix(cur.lNo,middle,result,limit,startK,asc,counter);
+			realBulkPrefix(cur.lNo,left,result,limit,startK,asc,counter);
+			
 		}
 	}
 

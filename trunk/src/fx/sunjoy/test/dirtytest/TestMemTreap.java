@@ -64,7 +64,7 @@ public class TestMemTreap {
 		
 		t1 = System.currentTimeMillis();
 		System.out.println("=======prefix search=========");
-		Map<String,Integer> result2 = treap2.prefix("123",5);
+		Map<String,Integer> result2 = treap2.prefix("123",5,"",true);
 		for(String n : result2.keySet()){
 			System.out.println(n+":"+result2.get(n));
 		}

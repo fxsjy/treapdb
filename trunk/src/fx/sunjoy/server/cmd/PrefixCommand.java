@@ -16,7 +16,7 @@ public class PrefixCommand extends AbstractCommand{
 		String[] stuff = command.split(" ");
 		String prefix = stuff[1];
 		Integer limit = Integer.parseInt(stuff[2]);
-		Map<FastString, byte[]> result = diskTreap.prefix(new FastString(prefix),limit);
+		Map<FastString, byte[]> result = diskTreap.prefix(new FastString(prefix),limit,null,true);
 		for(Entry<FastString,byte[]> e :result.entrySet()){
 			byte[] realvalue = new byte[e.getValue().length - 4] ;
 			System.arraycopy(e.getValue(), 4, realvalue, 0, realvalue.length) ;

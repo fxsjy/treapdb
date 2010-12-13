@@ -25,8 +25,10 @@ public interface ITreap<K extends Comparable<K>, V> {
 	public abstract boolean delete(K key);
 
 	//前缀
-	public abstract Map<K,V> prefix(K prefixString,int limit);
+	public abstract Map<K,V> prefix(K prefixString,int limit,K startK, boolean asc);
 	
+	//批量前缀
+	public abstract Map<K,V> bulkPrefix(List<String> prefixList, int limit,K startK, boolean asc);
 	//<=key的
 	public abstract Map<K,V> before(K key,int limit);
 	
