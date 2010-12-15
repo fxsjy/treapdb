@@ -28,7 +28,7 @@ public class TestTreapDBClientBulkPut {
 		for(int i=0;i<count;i++){
 			Integer key = (int) (Math.random()*Integer.MAX_VALUE);
 			batchData.put("thing"+key,buf);
-			if(i%2000==0){
+			if(i%10000==0){
 				client.bulkPut(batchData);
 				batchData = new HashMap<String, ByteBuffer>();//reset
 			}
