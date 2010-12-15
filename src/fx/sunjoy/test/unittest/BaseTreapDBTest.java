@@ -204,6 +204,12 @@ public class BaseTreapDBTest extends TestCase {
 		assertEquals(1, result_3.size()) ;
 		assertEquals("ÄãºÃ", new String(result_3.get(new FastString("18 year")))) ;
 		
+		for(int i=10;i<=100;i++){
+			fastStringIndex.put(new FastString(""+i), (i+"").getBytes());
+		}
+		
+		assertEquals("[100, 10]",fastStringIndex.prefix(new FastString("1"), 5, new FastString("100"), false).keySet().toString());
+		assertEquals("[10, 100, 11, 12, 13, 14, 15]",fastStringIndex.prefix(new FastString("1"), 7, new FastString("10"), true).keySet().toString());
 		fastStringIndex.close();
 	}
 	
