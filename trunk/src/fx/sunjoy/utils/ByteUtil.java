@@ -2,7 +2,6 @@ package fx.sunjoy.utils;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
@@ -11,9 +10,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.CRC32;
-import java.util.zip.DataFormatException;
-import java.util.zip.Deflater;
-import java.util.zip.Inflater;
 
 import fx.sunjoy.algo.impl.DiskTreapHeader;
 import fx.sunjoy.algo.impl.DiskTreapNode;
@@ -395,7 +391,8 @@ public class ByteUtil {
 	}
 	
 	public static byte[] unzipBytes(byte[] bytes) throws Exception{
-		Inflater decompressor = new Inflater();
+		return QuickLZ.decompress(bytes);
+		/*Inflater decompressor = new Inflater();
 		decompressor.setInput(bytes);
 		// Create an expandable byte array to hold the decompressed data
 		ByteArrayOutputStream bos = new ByteArrayOutputStream(bytes.length);
@@ -415,11 +412,12 @@ public class ByteUtil {
 		}
 		// Get the decompressed data
 		byte[] decompressedData = bos.toByteArray();
-		return decompressedData;
+		return decompressedData;*/
 	}
 	
 	public static byte[] zipBytes(byte[] origin) throws Exception {
-		Deflater compressor = new Deflater();
+		return QuickLZ.compress(origin);
+		/*Deflater compressor = new Deflater();
 		compressor.setLevel(Deflater.BEST_SPEED);
 
 		// Give the compressor the data to compress
@@ -445,7 +443,7 @@ public class ByteUtil {
 
 		// Get the compressed data
 		byte[] compressedData = bos.toByteArray();
-		return compressedData;
+		return compressedData;*/
     }
 	
 	public static long getCRC32(byte[] bytes){
