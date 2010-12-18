@@ -24,6 +24,7 @@ public interface ITreap<K extends Comparable<K>, V> {
 	//É¾³ý
 	public abstract boolean delete(K key);
 
+	public abstract boolean removePrefix(K prefixString);
 	//Ç°×º
 	public abstract Map<K,V> prefix(K prefixString,int limit,K startK, boolean asc);
 	

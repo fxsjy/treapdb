@@ -271,8 +271,7 @@ public class DiskTreap<K extends Comparable<K>,V extends Serializable> implement
 	//这个版本的实现会有空间浪费
 	public boolean delete(K key) {
 		DiskTreapHeader header;
-		this.valueCache.remove(key);
-		this.bigValueCache.remove(key);
+		evictFromCache(key);
 		try {
 			lock.writeLock().lock();
 			int old_length = length();
@@ -285,9 +284,6 @@ public class DiskTreap<K extends Comparable<K>,V extends Serializable> implement
 				return false; //not found
 			}
 			
-			//在data文件中加入删除记录信息
-			this.blockUtil.addDeleteInfo(key) ;
-			
 			return true;
 		} catch (Exception e) {
 			throw new RuntimeException(e);
@@ -296,11 +292,23 @@ public class DiskTreap<K extends Comparable<K>,V extends Serializable> implement
 		}
 	}
 
+	private void evictFromCache(K key) {
+		this.valueCache.remove(key);
+		this.bigValueCache.remove(key);
+	}
+
 	private int remove(int startNode, K key) throws Exception {
 		if(startNode == -1) return -1;
 		DiskTreapNode<K,V> currentNode = this.blockUtil.readNode(startNode, false);
 		int cp = currentNode.key.compareTo(key);
 		if(cp==0){
+			if(currentNode.fix!=Integer.MAX_VALUE){
+				currentNode.fix = Integer.MAX_VALUE;
+				this.blockUtil.writeNode(startNode, currentNode, false);
+				//在data文件中加入删除记录信息
+				this.blockUtil.addDeleteInfo(key) ;
+			}
+			
 			if(currentNode.lNo==-1 && currentNode.rNo==-1){
 				return -1;
 			}else if(currentNode.rNo==-1){
@@ -814,5 +822,100 @@ public class DiskTreap<K extends Comparable<K>,V extends Serializable> implement
 		}
 	}
 
+	@Override
+	public boolean removePrefix(K prefixString) {
+		DiskTreapHeader header;
+		try {
+			lock.writeLock().lock();
+			int old_length = length();
+			header = this.blockUtil.readHeader();
+			int rootNo = realRemovePrefix(header.rootNo,prefixString);
+			header = this.blockUtil.readHeader();
+			header.rootNo = rootNo;
+			this.blockUtil.writeHeader(header);
+			if(old_length==length()){
+				return false; //not found
+			}
+			return true;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}finally{
+			lock.writeLock().unlock();
+		}
+	}
+
+	private int realRemovePrefix(int startNode, K prefixString) throws Exception {
+		if(startNode == -1) return -1;
+		DiskTreapNode<K,V> currentNode = this.blockUtil.readNode(startNode, false);
+		int cp = prefixString.compareTo(currentNode.key);
+		if(cp<=0){
+			if(isPrefixString(prefixString.toString(), currentNode.key.toString())){
+				if(currentNode.fix!=Integer.MAX_VALUE){
+					//在data文件中加入删除记录信息
+					currentNode.fix = Integer.MAX_VALUE;
+					this.blockUtil.writeNode(startNode, currentNode, false);
+					this.blockUtil.addDeleteInfo(currentNode.key) ;
+					evictFromCache(currentNode.key);
+				}
+				if(currentNode.lNo==-1 && currentNode.rNo==-1 ){
+					return -1;
+				}else if(currentNode.rNo==-1){
+					return realRemovePrefix(currentNode.lNo,prefixString);
+				}else if(currentNode.lNo==-1){
+					return realRemovePrefix(currentNode.rNo,prefixString);
+				}else{
+					DiskTreapNode<K, V> leftNode = this.blockUtil.readNode(currentNode.lNo, false);
+					DiskTreapNode<K, V> rightNode = this.blockUtil.readNode(currentNode.rNo, false);
+					int newstartNodeNo=-1;
+					
+					if(leftNode.fix<rightNode.fix){
+						newstartNodeNo = rotateRight(startNode);
+					}else{
+						newstartNodeNo = rotateLeft(startNode);
+					}
+					DiskTreapNode<K, V> newstartNode = this.blockUtil.readNode(newstartNodeNo, false);
+					
+					newstartNode.rNo = realRemovePrefix(newstartNode.rNo, prefixString);
+					if(newstartNode.rNo==-1){
+						newstartNode.r_size = 0;
+					}else{
+						DiskTreapNode<K, V>  rN = this.blockUtil.readNode(newstartNode.rNo,false);
+						newstartNode.r_size = 1+rN.l_size+rN.r_size;
+					}
+					newstartNode.lNo = realRemovePrefix(newstartNode.lNo,prefixString);
+					if(newstartNode.lNo==-1){
+						newstartNode.l_size = 0;
+					}else{
+						DiskTreapNode<K, V>  lN = this.blockUtil.readNode(newstartNode.lNo,false);
+						newstartNode.l_size = 1+lN.l_size+lN.r_size;
+					}
+					this.blockUtil.writeNode(newstartNodeNo,newstartNode,false);
+					if(isPrefixString(prefixString.toString(), newstartNode.key.toString())){
+						return realRemovePrefix(newstartNodeNo, prefixString);
+					}
+					return newstartNodeNo;
+				}
+			}else{
+				currentNode.lNo = realRemovePrefix(currentNode.lNo, prefixString);
+				if(currentNode.lNo==-1){
+					currentNode.l_size = 0;
+				}else{
+					DiskTreapNode<K, V>  lN = this.blockUtil.readNode(currentNode.lNo,false);
+					currentNode.l_size = 1+lN.l_size+lN.r_size;
+				}
+				this.blockUtil.writeNode(startNode, currentNode, false);
+			}
+		}else{
+			currentNode.rNo = realRemovePrefix(currentNode.rNo, prefixString);
+			if(currentNode.rNo==-1){
+				currentNode.r_size = 0;
+			}else{
+				DiskTreapNode<K, V>  rN = this.blockUtil.readNode(currentNode.rNo,false);
+				currentNode.r_size = 1+rN.l_size+rN.r_size;
+			}
+			this.blockUtil.writeNode(startNode, currentNode, false);
+		}
+		return startNode;
+	}
 
 }

@@ -123,6 +123,59 @@ public class BaseTreapDBTest extends TestCase {
 		fastStringIndex.close();
 	}
 	
+public void testAfter() throws Exception{
+		
+		DiskTreap<String, Integer> strKeyIndex = new DiskTreap<String, Integer>(prepareDataStringKey());
+		Map<String, Integer> result = strKeyIndex.after("18 year", 2) ;
+		assertNotNull(result) ;
+		assertEquals(456, (int)result.get("IBM")) ;
+		strKeyIndex.close() ;
+		
+		//=======
+		
+		DiskTreap<Integer, String> intKeyIndex = new DiskTreap<Integer, String>(prepareDataFastIntKey());
+		Map<Integer, String> result_2 = intKeyIndex.after(0, 2) ;
+		assertNotNull(result_2) ;
+		assertEquals("def", result_2.get(133)) ;
+		intKeyIndex.close() ;
+		
+		//=======
+		
+		DiskTreap<FastString, byte[]> fastStringIndex = new DiskTreap<FastString, byte[]>(prepareDataFastStringKey());
+		Map<FastString, byte[]> result_3 = fastStringIndex.after(new FastString("18 year"), 2) ;
+		assertNotNull(result_3) ;
+		assertEquals("456", new String(result_3.get(new FastString("IBM")))) ;
+		fastStringIndex.close() ;
+		
+	}
+	
+	public void testBefore() throws Exception{
+		
+		DiskTreap<String, Integer> strKeyIndex = new DiskTreap<String, Integer>(prepareDataStringKey());
+		Map<String, Integer> result = strKeyIndex.before("18 year", 2) ;
+		assertNotNull(result) ;
+		assertEquals(789, (int)result.get("18 year")) ;
+		strKeyIndex.close() ;
+		
+		//=======
+		
+		DiskTreap<Integer, String> intKeyIndex = new DiskTreap<Integer, String>(prepareDataFastIntKey());
+		Map<Integer, String> result_2 = intKeyIndex.before(0, 2) ;
+		assertNotNull(result_2) ;
+		assertEquals("abc", result_2.get(-12)) ;
+		intKeyIndex.close() ;
+		
+		//=======
+		
+		DiskTreap<FastString, byte[]> fastStringIndex = new DiskTreap<FastString, byte[]>(prepareDataFastStringKey());
+		Map<FastString, byte[]> result_3 = fastStringIndex.before(new FastString("18 year"), 2) ;
+		assertNotNull(result_3) ;
+		assertEquals("11789", new String(result_3.get(new FastString("中科院计算所")))) ;
+		fastStringIndex.close() ;
+		
+	}
+	
+	
 	public void testPrefix() throws Exception
 	{
 		
@@ -300,57 +353,7 @@ public class BaseTreapDBTest extends TestCase {
 		
 	}
 	
-	public void testAfter() throws Exception{
-		
-		DiskTreap<String, Integer> strKeyIndex = new DiskTreap<String, Integer>(prepareDataStringKey());
-		Map<String, Integer> result = strKeyIndex.after("18 year", 2) ;
-		assertNotNull(result) ;
-		assertEquals(456, (int)result.get("IBM")) ;
-		strKeyIndex.close() ;
-		
-		//=======
-		
-		DiskTreap<Integer, String> intKeyIndex = new DiskTreap<Integer, String>(prepareDataFastIntKey());
-		Map<Integer, String> result_2 = intKeyIndex.after(0, 2) ;
-		assertNotNull(result_2) ;
-		assertEquals("def", result_2.get(133)) ;
-		intKeyIndex.close() ;
-		
-		//=======
-		
-		DiskTreap<FastString, byte[]> fastStringIndex = new DiskTreap<FastString, byte[]>(prepareDataFastStringKey());
-		Map<FastString, byte[]> result_3 = fastStringIndex.after(new FastString("18 year"), 2) ;
-		assertNotNull(result_3) ;
-		assertEquals("456", new String(result_3.get(new FastString("IBM")))) ;
-		fastStringIndex.close() ;
-		
-	}
 	
-	public void testBefore() throws Exception{
-		
-		DiskTreap<String, Integer> strKeyIndex = new DiskTreap<String, Integer>(prepareDataStringKey());
-		Map<String, Integer> result = strKeyIndex.before("18 year", 2) ;
-		assertNotNull(result) ;
-		assertEquals(789, (int)result.get("18 year")) ;
-		strKeyIndex.close() ;
-		
-		//=======
-		
-		DiskTreap<Integer, String> intKeyIndex = new DiskTreap<Integer, String>(prepareDataFastIntKey());
-		Map<Integer, String> result_2 = intKeyIndex.before(0, 2) ;
-		assertNotNull(result_2) ;
-		assertEquals("abc", result_2.get(-12)) ;
-		intKeyIndex.close() ;
-		
-		//=======
-		
-		DiskTreap<FastString, byte[]> fastStringIndex = new DiskTreap<FastString, byte[]>(prepareDataFastStringKey());
-		Map<FastString, byte[]> result_3 = fastStringIndex.before(new FastString("18 year"), 2) ;
-		assertNotNull(result_3) ;
-		assertEquals("11789", new String(result_3.get(new FastString("中科院计算所")))) ;
-		fastStringIndex.close() ;
-		
-	}
 	
 	public void testLength() throws Exception{
 		File strKeyIndexFile = prepareDataStringKey();
@@ -391,4 +394,39 @@ public class BaseTreapDBTest extends TestCase {
 		index.close();
 	}
 	
+	public void testRemove() throws Exception{
+		new File("tmp/remove_test").delete();
+		new File("tmp/remove_faststr_test").delete();
+		DiskTreap<String, Integer> treap = new DiskTreap<String,Integer>(new File("tmp/remove_test"));
+		for(int i=0;i<100;i++){
+			treap.put("thing"+i, i);
+		}
+		assertEquals(100,treap.length());
+		for(int i=0;i<9;i++){
+			treap.removePrefix("thing"+i);
+		}
+		assertEquals(11,treap.length());
+		assertEquals("{thing99=99, thing98=98, thing97=97, thing96=96, thing95=95, thing94=94, thing93=93, thing92=92, thing91=91, thing90=90, thing9=9}",treap.kmax(100).toString());
+		treap.delete("thing9");
+		assertEquals(10,treap.length());
+		assertEquals("{thing99=99, thing98=98, thing97=97, thing96=96, thing95=95, thing94=94, thing93=93, thing92=92, thing91=91, thing90=90}",treap.kmax(100).toString());
+		assertNull(treap.get("thing77"));
+		
+		
+		
+		DiskTreap<FastString, Integer> treap2 = new DiskTreap<FastString,Integer>(new File("tmp/remove_faststr_test"));
+		for(int i=0;i<100;i++){
+			treap2.put(new FastString("thing"+i), i);
+		}
+		assertEquals(100,treap2.length());
+		for(int i=0;i<9;i++){
+			treap2.removePrefix(new FastString("thing"+i));
+		}
+		assertEquals(11,treap2.length());
+		assertEquals("{thing99=99, thing98=98, thing97=97, thing96=96, thing95=95, thing94=94, thing93=93, thing92=92, thing91=91, thing90=90, thing9=9}",treap2.kmax(100).toString());
+		treap2.delete(new FastString("thing9"));
+		assertEquals(10,treap2.length());
+		assertEquals("{thing99=99, thing98=98, thing97=97, thing96=96, thing95=95, thing94=94, thing93=93, thing92=92, thing91=91, thing90=90}",treap2.kmax(100).toString());
+		assertNull(treap2.get(new FastString("thing77")));
+	}
 }

@@ -34,6 +34,7 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
   print '   after(string key, i32 limit)'
   print '  i32 length()'
   print '  bool remove(string key)'
+  print '  bool removePrefix(string key)'
   print ''
   sys.exit(0)
 
@@ -161,6 +162,12 @@ elif cmd == 'remove':
     print 'remove requires 1 args'
     sys.exit(1)
   pp.pprint(client.remove(args[0],))
+
+elif cmd == 'removePrefix':
+  if len(args) != 1:
+    print 'removePrefix requires 1 args'
+    sys.exit(1)
+  pp.pprint(client.removePrefix(args[0],))
 
 else:
   print 'Unrecognized method %s' % cmd

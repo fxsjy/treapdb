@@ -188,6 +188,16 @@ public class TreapDBBinaryProtocolServer implements Iface{
 		return mapToList(result);
 	}
 
-	
+	@Override
+	public boolean removePrefix(String key) throws TException {
+		// TODO Auto-generated method stub
+		if(replicationRole != null && replicationRole.equalsIgnoreCase("Slave"))
+		{
+			return false;
+		}
+		
+		return treap.removePrefix(new FastString(key));
+	}
+
 	
 }

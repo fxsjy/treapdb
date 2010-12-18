@@ -173,8 +173,10 @@ public class BlockUtil<K extends Comparable<K>,V extends Serializable> {
 			if(dataFileMap!=null){
 				for(Entry<String,FileChannel> e: dataFileMap.entrySet()){
 					if(e.getValue()!=null){
-						e.getValue().force(true);
-						e.getValue().close();
+						if(e.getValue().isOpen()){
+							e.getValue().force(true);
+							e.getValue().close();
+						}
 					}
 				}
 			}
