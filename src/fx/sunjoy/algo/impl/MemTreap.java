@@ -273,5 +273,11 @@ public class MemTreap<K extends Comparable<K>,V> implements ITreap<K, V>  {
 		return null;
 	}
 
+	@Override
+	public boolean removePrefix(K prefixString) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
 	
 }

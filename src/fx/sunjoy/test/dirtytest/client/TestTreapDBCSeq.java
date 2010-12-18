@@ -1,11 +1,9 @@
 package fx.sunjoy.test.dirtytest.client;
 
 import java.nio.ByteBuffer;
-import java.util.List;
 
 import fx.sunjoy.client.TreapDBClient;
 import fx.sunjoy.client.TreapDBClientFactory;
-import fx.sunjoy.server.gen.Pair;
 
 public class TestTreapDBCSeq {
 	public static void main(String[] args) throws Exception {
@@ -22,21 +20,22 @@ public class TestTreapDBCSeq {
 		for(int i=0;i<count;i++){
 			//Integer key = (int) (Math.random()*Integer.MAX_VALUE);
 			//System.out.println(String.format("%010d", key));
-			client.put("thing"+i,buf);
+			client.put(""+i,buf);
 			//String v = treap.get("thing"+i);
 			if(i%100==0)
-				System.out.println("geting:"+i);
+				System.out.println("inserting:"+i);
 		}
-		List<Pair> results = client.prefix("thing", 100,null,true);
+		
+		System.out.println(System.currentTimeMillis()-t1);
+		/*List<Pair> results = client.prefix("thing", 100,null,true);
 		for(Pair e: results){
 			System.out.println(e.getKey()+":"+new String(e.getValue()));
 		}
-		System.out.println(System.currentTimeMillis()-t1);
 		System.out.println("before deleting:"+client.length());
 		for(int i=0;i<10;i++){
 			client.remove("thing"+i);
 		}
-		System.out.println("after deleting:"+client.length());
+		System.out.println("after deleting:"+client.length());*/
 		client.close();
 	}
 }
