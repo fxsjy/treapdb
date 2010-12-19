@@ -307,6 +307,7 @@ public class DiskTreap<K extends Comparable<K>,V extends Serializable> implement
 				this.blockUtil.writeNode(startNode, currentNode, false);
 				//在data文件中加入删除记录信息
 				this.blockUtil.addDeleteInfo(key) ;
+				pushDeletedNode(startNode, currentNode);
 			}
 			
 			if(currentNode.lNo==-1 && currentNode.rNo==-1){
@@ -439,6 +440,33 @@ public class DiskTreap<K extends Comparable<K>,V extends Serializable> implement
 	}
 
 	
+	private void pushDeletedNode(int nodeNo,DiskTreapNode<K, V> deletedNode) throws Exception{
+		DiskTreapHeader header = this.blockUtil.readHeader();
+		if(header.deletedNode==-1){
+			header.deletedNode = nodeNo;
+		}else{
+			int tmp = header.deletedNode;
+			header.deletedNode = nodeNo;
+			deletedNode.valuePtr = tmp;
+			this.blockUtil.writeNode(nodeNo, deletedNode, false);
+		}
+		this.blockUtil.writeHeader(header);
+	}
+	
+	private int popDeletedNode() throws Exception{
+		DiskTreapHeader header = this.blockUtil.readHeader();
+		if(header.deletedNode == -1){
+			return -1;
+		}else{
+			int topNodeNo = header.deletedNode;
+			DiskTreapNode<K, V> topNode = this.blockUtil.readNode(topNodeNo, false);
+			int nextNodeNo = (int)topNode.valuePtr;
+			header.deletedNode = nextNodeNo;
+			this.blockUtil.writeHeader(header);
+			return topNodeNo;
+		}
+	}
+	
 	private int insert(int startNode,K key,V value) throws Exception{
 		if(startNode==-1){
 			DiskTreapHeader header = this.blockUtil.readHeader();
@@ -446,10 +474,16 @@ public class DiskTreap<K extends Comparable<K>,V extends Serializable> implement
 			newNode.key = key;
 			newNode.value = value;
 			newNode.fix = (int)(Math.random()*Integer.MAX_VALUE);
-			this.blockUtil.writeNode(header.size, newNode, true);
-			header.size++;
-			this.blockUtil.writeHeader(header);
-			return header.size-1;
+			if(header.deletedNode == -1){
+				this.blockUtil.writeNode(header.size, newNode, true);
+				header.size++;
+				this.blockUtil.writeHeader(header);
+				return header.size-1;
+			}else{
+				int pos = popDeletedNode();
+				this.blockUtil.writeNode(pos,newNode,true);
+				return pos;
+			}
 		}else{
 			DiskTreapNode<K,V> currentNode = this.blockUtil.readNode(startNode, false);
 			int cp = currentNode.key.compareTo(key);
@@ -855,6 +889,7 @@ public class DiskTreap<K extends Comparable<K>,V extends Serializable> implement
 					currentNode.fix = Integer.MAX_VALUE;
 					this.blockUtil.writeNode(startNode, currentNode, false);
 					this.blockUtil.addDeleteInfo(currentNode.key) ;
+					pushDeletedNode(startNode, currentNode);
 					evictFromCache(currentNode.key);
 				}
 				if(currentNode.lNo==-1 && currentNode.rNo==-1 ){

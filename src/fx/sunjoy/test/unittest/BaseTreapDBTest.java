@@ -411,8 +411,12 @@ public void testAfter() throws Exception{
 		assertEquals(10,treap.length());
 		assertEquals("{thing99=99, thing98=98, thing97=97, thing96=96, thing95=95, thing94=94, thing93=93, thing92=92, thing91=91, thing90=90}",treap.kmax(100).toString());
 		assertNull(treap.get("thing77"));
-		
-		
+		treap.close();
+		treap = new DiskTreap<String,Integer>(new File("tmp/remove_test"));
+		for(int i=0;i<100;i++){
+			treap.put("thing"+i, i);
+		}
+		assertEquals(100,treap.length());
 		
 		DiskTreap<FastString, Integer> treap2 = new DiskTreap<FastString,Integer>(new File("tmp/remove_faststr_test"));
 		for(int i=0;i<100;i++){
@@ -428,5 +432,7 @@ public void testAfter() throws Exception{
 		assertEquals(10,treap2.length());
 		assertEquals("{thing99=99, thing98=98, thing97=97, thing96=96, thing95=95, thing94=94, thing93=93, thing92=92, thing91=91, thing90=90}",treap2.kmax(100).toString());
 		assertNull(treap2.get(new FastString("thing77")));
+		treap2.close();
+		
 	}
 }
