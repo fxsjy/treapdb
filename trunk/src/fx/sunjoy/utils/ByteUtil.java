@@ -23,6 +23,7 @@ public class ByteUtil {
 		buf.putInt(header.rootNo);
 		buf.putInt(header.size);
 		buf.putInt(header.block_size);
+		buf.putInt(header.deletedNode);
 		buf.flip();
 		return buf;
 	}
@@ -32,6 +33,7 @@ public class ByteUtil {
 		header.rootNo = buf.getInt();
 		header.size = buf.getInt();
 		header.block_size= buf.getInt();
+		header.deletedNode = buf.getInt();
 		buf = null;
 		return header;
 	}
