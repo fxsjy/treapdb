@@ -442,8 +442,10 @@ public class DiskTreap<K extends Comparable<K>,V extends Serializable> implement
 	
 	private void pushDeletedNode(int nodeNo,DiskTreapNode<K, V> deletedNode) throws Exception{
 		DiskTreapHeader header = this.blockUtil.readHeader();
+		deletedNode.valuePtr = -1;
 		if(header.deletedNode==-1){
 			header.deletedNode = nodeNo;
+			this.blockUtil.writeNode(nodeNo, deletedNode, false);
 		}else{
 			int tmp = header.deletedNode;
 			header.deletedNode = nodeNo;
