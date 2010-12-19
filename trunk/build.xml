@@ -1,6 +1,7 @@
 <project basedir="." default="build" name="libtreap">
 	<property name="libs" value="${basedir}/lib" />
 	<property name="build.src" value="${basedir}/src" />
+	<property name="build.conf" value="${basedir}/conf" />
 	<property name="build.out" value="${basedir}/build" />
 	<property name="build.classes" value="${build.out}/classes" />
 	<property name="build.dist" value="${build.out}/dist" />
@@ -23,7 +24,7 @@
 			</classpath>
 		</javac>
 		<copy todir="${build.classes}">
-			<fileset dir="${build.src}">
+			<fileset dir="${build.conf}">
 				<include name="**/*.properties" />
 			</fileset>
 		</copy>
