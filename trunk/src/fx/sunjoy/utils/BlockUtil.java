@@ -104,7 +104,7 @@ public class BlockUtil<K extends Comparable<K>,V extends Serializable> {
 	private void initMMBuf() throws IOException {
 		long tailPageStart = 0 ;
 		long reminderSize = INIT_INDEX_MMAP_SIZE;
-		for(int i=0;i<INIT_INDEX_MMAP_SIZE/MMAP_PAGE_SIZE-1;i++){
+		for(int i=0;i<INIT_INDEX_MMAP_SIZE/MMAP_PAGE_SIZE;i++){
 			writeMMBuf.add(indexFile.map(FileChannel.MapMode.READ_WRITE	, i*(long)MMAP_PAGE_SIZE	, MMAP_PAGE_SIZE+blockSize));
 			tailPageStart += MMAP_PAGE_SIZE;
 			reminderSize -= MMAP_PAGE_SIZE;
