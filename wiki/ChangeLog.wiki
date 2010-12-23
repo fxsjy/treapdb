@@ -8,6 +8,7 @@
     * a paging bug fixed.
     * a bug of "bulkPut" fixed.
     * a more easy to use python-client
+    * 2010-12-23
 
 ==Version2.0 Beta2==
     * support bulk operations: bulkPut and bulkGet (pretty fast)
