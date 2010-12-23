@@ -19,5 +19,6 @@ service	TreapDBService{
 	list<Pair> after(1:string key,2:i32 limit),
 	i32 length(),
 	bool remove(1:string key),
-	bool removePrefix(1:string key)
+	bool removePrefix(1:string key),
+	void optimize(1:i32 amount)
 } 

@@ -199,5 +199,10 @@ public class TreapDBBinaryProtocolServer implements Iface{
 		return treap.removePrefix(new FastString(key));
 	}
 
+	@Override
+	public void optimize(int amount) throws TException {
+		treap.optimize(amount);
+	}
+
 	
 }

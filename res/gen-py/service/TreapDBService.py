@@ -121,6 +121,13 @@ class Iface:
     """
     pass
 
+  def optimize(self, amount):
+    """
+    Parameters:
+     - amount
+    """
+    pass
+
 
 class Client(Iface):
   def __init__(self, iprot, oprot=None):
@@ -562,6 +569,34 @@ class Client(Iface):
       return result.success
     raise TApplicationException(TApplicationException.MISSING_RESULT, "removePrefix failed: unknown result");
 
+  def optimize(self, amount):
+    """
+    Parameters:
+     - amount
+    """
+    self.send_optimize(amount)
+    self.recv_optimize()
+
+  def send_optimize(self, amount):
+    self._oprot.writeMessageBegin('optimize', TMessageType.CALL, self._seqid)
+    args = optimize_args()
+    args.amount = amount
+    args.write(self._oprot)
+    self._oprot.writeMessageEnd()
+    self._oprot.trans.flush()
+
+  def recv_optimize(self, ):
+    (fname, mtype, rseqid) = self._iprot.readMessageBegin()
+    if mtype == TMessageType.EXCEPTION:
+      x = TApplicationException()
+      x.read(self._iprot)
+      self._iprot.readMessageEnd()
+      raise x
+    result = optimize_result()
+    result.read(self._iprot)
+    self._iprot.readMessageEnd()
+    return
+
 
 class Processor(Iface, TProcessor):
   def __init__(self, handler):
@@ -581,6 +616,7 @@ class Processor(Iface, TProcessor):
     self._processMap["length"] = Processor.process_length
     self._processMap["remove"] = Processor.process_remove
     self._processMap["removePrefix"] = Processor.process_removePrefix
+    self._processMap["optimize"] = Processor.process_optimize
 
   def process(self, iprot, oprot):
     (name, type, seqid) = iprot.readMessageBegin()
@@ -747,6 +783,17 @@ class Processor(Iface, TProcessor):
     result = removePrefix_result()
     result.success = self._handler.removePrefix(args.key)
     oprot.writeMessageBegin("removePrefix", TMessageType.REPLY, seqid)
+    result.write(oprot)
+    oprot.writeMessageEnd()
+    oprot.trans.flush()
+
+  def process_optimize(self, seqid, iprot, oprot):
+    args = optimize_args()
+    args.read(iprot)
+    iprot.readMessageEnd()
+    result = optimize_result()
+    self._handler.optimize(args.amount)
+    oprot.writeMessageBegin("optimize", TMessageType.REPLY, seqid)
     result.write(oprot)
     oprot.writeMessageEnd()
     oprot.trans.flush()
@@ -2553,6 +2600,106 @@ class removePrefix_result:
       oprot.writeFieldBegin('success', TType.BOOL, 0)
       oprot.writeBool(self.success)
       oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+    def validate(self):
+      return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class optimize_args:
+  """
+  Attributes:
+   - amount
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.I32, 'amount', None, None, ), # 1
+  )
+
+  def __init__(self, amount=None,):
+    self.amount = amount
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.I32:
+          self.amount = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('optimize_args')
+    if self.amount != None:
+      oprot.writeFieldBegin('amount', TType.I32, 1)
+      oprot.writeI32(self.amount)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+    def validate(self):
+      return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class optimize_result:
+
+  thrift_spec = (
+  )
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('optimize_result')
     oprot.writeFieldStop()
     oprot.writeStructEnd()
     def validate(self):

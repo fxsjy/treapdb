@@ -3,12 +3,17 @@ package fx.sunjoy.algo.impl;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.NavigableSet;
+import java.util.Queue;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -92,6 +97,131 @@ public class DiskTreap<K extends Comparable<K>,V extends Serializable> implement
 		}
 	}
 	
+	public void optimize(int swapCount){
+		DiskTreapHeader header;
+		try {
+			lock.writeLock().lock();
+			header = this.blockUtil.readHeader();
+			int rootNo = header.rootNo;
+			if(rootNo==-1)return;
+			
+			//1.找出Treap的前n层节点：集合A
+			Queue<DiskTreapNode<K, V>> setA = new LinkedList<DiskTreapNode<K, V>>();
+			Queue<Integer> queue = new LinkedList<Integer>();
+			Queue<DiskTreapNode<K, V>> setB = new LinkedList<DiskTreapNode<K,V>>();
+			Set<K> bucketA = new TreeSet<K>();
+			Set<K> bucketB = new TreeSet<K>();
+			
+			queue.add(rootNo);
+			int treapLength = this.length();
+			
+			while(!queue.isEmpty()){
+				int nodeNumber = queue.poll();
+				DiskTreapNode<K,V> tmpNode = this.blockUtil.readNode(nodeNumber,false);
+				setA.add(tmpNode);
+				bucketA.add(tmpNode.key);
+				if(tmpNode.lNo!=-1){
+					queue.add(tmpNode.lNo);
+				}
+				if(tmpNode.rNo!=-1){
+					queue.add(tmpNode.rNo);
+				}
+				if(setA.size()>=treapLength || setA.size()>=swapCount){
+					break;
+				}
+			}
+			
+			//2.找出在IndexFile中排在前面的setA.size()个节点: 集合B
+			int z = 0;
+			while(setB.size()<setA.size()){
+				DiskTreapNode<K,V> tmpNode = this.blockUtil.readNode(z, false);
+				if(tmpNode.fix!=Integer.MAX_VALUE){//not deleted node
+					setB.offer(tmpNode);
+					bucketB.add(tmpNode.key);
+				}
+				z++;
+			}
+			
+			List<DiskTreapNode<K,V>> setA_B = new ArrayList<DiskTreapNode<K,V>>();
+			List<DiskTreapNode<K,V>> setB_A = new ArrayList<DiskTreapNode<K,V>>();
+			for(DiskTreapNode<K,V> node: setA){
+				if(!bucketB.contains(node.key)){
+					setA_B.add(node);
+				}
+			}
+			for(DiskTreapNode<K,V> node: setB){
+				if(!bucketA.contains(node.key)){
+					setB_A.add(node);
+				}
+			}
+			System.out.println(setA_B.size()+":"+setB_A.size());
+			//3.交换A-B与B-A
+			for(int i=0;i<setA_B.size();i++){
+				swapNode(setA_B.get(i).key,setB_A.get(i).key);
+			}
+			
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}finally{
+			lock.writeLock().unlock();
+		}
+		
+	}
+	
+	//交换两个节点的物理位置
+	private void swapNode(K k_A,K k_B) throws Exception {
+		Map<Integer,Integer> pAMap = new HashMap<Integer,Integer>();
+		Map<Integer,Integer> pBMap = new HashMap<Integer,Integer>();
+		Map<Integer,Integer> pADirectionMap = new HashMap<Integer, Integer>();
+		Map<Integer,Integer> pBDirectionMap = new HashMap<Integer, Integer>();
+		DiskTreapHeader header;
+		header = this.blockUtil.readHeader();
+		int rootNo = header.rootNo;
+		
+		int A_NO = findWithParent(rootNo, k_A, pAMap,pADirectionMap);
+		int B_NO = findWithParent(rootNo, k_B, pBMap,pBDirectionMap);
+		
+		Integer PA_NO = pAMap.get(A_NO);
+		Integer PB_NO = pBMap.get(B_NO);
+		
+		DiskTreapNode<K,V> nodeA = this.blockUtil.readNode(A_NO, false);
+		DiskTreapNode<K,V> nodeB = this.blockUtil.readNode(B_NO, false);
+		
+		DiskTreapNode<K,V> nodePA = this.blockUtil.readNode(PA_NO, false);
+		if(pADirectionMap.get(A_NO)==0){//left child
+			nodePA.lNo = B_NO;
+		}
+		else if(pADirectionMap.get(A_NO)==1){
+			nodePA.rNo = B_NO;
+		}else{
+			header.rootNo = B_NO;
+		}
+		DiskTreapNode<K,V> nodePB = this.blockUtil.readNode(PB_NO, false);
+		if(pBDirectionMap.get(B_NO)==0){//left child
+			nodePB.lNo = A_NO;
+		}
+		else if(pBDirectionMap.get(B_NO)==1){
+			nodePB.rNo = A_NO;
+		}else{
+			header.rootNo = A_NO;
+		}
+		if(B_NO == PA_NO){
+			this.blockUtil.writeNode(B_NO, nodeA, false);
+			this.blockUtil.writeNode(A_NO, nodePA, false);
+		}
+		else if(A_NO==PB_NO){
+			this.blockUtil.writeNode(A_NO, nodeB, false);
+			this.blockUtil.writeNode(B_NO, nodePB, false);
+		}
+		else{
+			this.blockUtil.writeNode(A_NO, nodeB, false);
+			this.blockUtil.writeNode(B_NO, nodeA, false);
+			this.blockUtil.writeNode(PA_NO, nodePA, false);
+			this.blockUtil.writeNode(PB_NO, nodePB, false);
+		}
+		this.blockUtil.writeHeader(header);
+	}
+
 	//读出
 	/* (non-Javadoc)
 	 * @see fx.sunjoy.algo.impl.ITreap#get(K)
@@ -566,6 +696,31 @@ public class DiskTreap<K extends Comparable<K>,V extends Serializable> implement
 		return -1;
 	}
 	
+	private int findWithParent(int startNode,K key,Map<Integer,Integer> parentMap,Map<Integer,Integer> directionMap) throws Exception{
+		if(startNode==-1){
+			return -1;
+		}else{
+			DiskTreapNode<K, V> currentNode = this.blockUtil.readNode(startNode, false);
+			int cp = currentNode.key.compareTo(key);
+			if(cp==0){
+				if(!parentMap.containsKey(startNode)){
+					parentMap.put(startNode, -1);
+					directionMap.put(startNode, -1);
+				}
+				return startNode;
+			}else if(cp<0){
+				parentMap.put(currentNode.rNo, startNode);
+				directionMap.put(currentNode.rNo,1); //right child
+				return findWithParent(currentNode.rNo,key,parentMap,directionMap);
+			}else if(cp>0){
+				parentMap.put(currentNode.lNo, startNode);
+				directionMap.put(currentNode.lNo,0); //left child
+				return  findWithParent(currentNode.lNo,key,parentMap,directionMap);
+			}
+		}
+		return -1;
+	}
+	
 	public List<V> Sync(int dataFileNO, long syncPos) throws Exception
 	{
 		List<V> result = this.blockUtil.getNewData(dataFileNO, syncPos) ;
@@ -758,13 +913,19 @@ public class DiskTreap<K extends Comparable<K>,V extends Serializable> implement
 			if(rfix<lfix){
 				if(rfix<currentNode.fix)
 					startNode = rotateLeft(oldNode);
-				if(lfix<currentNode.fix)
-					rotateRight(oldNode);
+				if(lfix<currentNode.fix){
+					DiskTreapNode< K, V> tmpNode = this.blockUtil.readNode(startNode, false);
+					tmpNode.lNo = rotateRight(oldNode);
+					this.blockUtil.writeNode(startNode,tmpNode,false);
+				}
 			}else{
 				if(lfix<currentNode.fix)
 					startNode = rotateRight(oldNode);
-				if(rfix<currentNode.fix)
-					rotateLeft(oldNode);
+				if(rfix<currentNode.fix){
+					DiskTreapNode< K, V> tmpNode = this.blockUtil.readNode(startNode, false);
+					tmpNode.rNo = rotateLeft(oldNode);
+					this.blockUtil.writeNode(startNode, tmpNode, false);
+				}
 			}
 			
 			return startNode;
