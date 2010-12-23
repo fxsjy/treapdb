@@ -18,4 +18,4 @@
 ||length||get the number of key-value pairs||none||
 ||remove||delete the indicated key-value pair||key||
 ||removePrefix||delete value of the keys with indicated prefix string||prefix||
-||optimize||optimize the space usage of index file||number of nodes need to be optimized||
+||optimize||optimize the space usage of index file||number of nodes need to be optimized(1024 is recommended value)||
