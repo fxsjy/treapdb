@@ -1,6 +1,6 @@
 #summary One-sentence summary of this page.
 
-= Oerations of TreapDB=
+= Operations of TreapDB=
 
 
 ||*Operation*||*Usage*||*Parameters*||
