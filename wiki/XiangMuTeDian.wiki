@@ -14,3 +14,7 @@
 ==常见问题==
 
   [http://code.google.com/p/treapdb/issues/list]
+
+==开发日志==
+ 
+  [http://code.google.com/p/treapdb/wiki/ChangeLog]
