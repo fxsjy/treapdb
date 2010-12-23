@@ -3,19 +3,19 @@
 = Oerations of TreapDB=
 
 
-||*Operation*||Specification||
-||put||...||
-||get||...||
-||bulkPut||...||
-||bulkGet||...||
-||prefix||...||
-||bulkPrefix||...||
-||kmax||...||
-||kmin||...||
-||range||...||
-||before||...||
-||after||...||
-||length||...||
-||remove||...||
-||removePrefix||...||
-||optmize||...||
+||*Operation*||*Usage*||*Parameters*||
+||put||...||...||
+||get||...||...||
+||bulkPut||...||...||
+||bulkGet||...||...||
+||prefix||...||...||
+||bulkPrefix||...||...||
+||kmax||...||...||
+||kmin||...||...||
+||range||...||...||
+||before||...||...||
+||after||...||...||
+||length||...||...||
+||remove||...||...||
+||removePrefix||...||...||
+||optmize||...||...||
