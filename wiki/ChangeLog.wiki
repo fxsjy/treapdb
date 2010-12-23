@@ -1,4 +1,13 @@
 #summary One-sentence summary of this page.
+==Version2.0 RC1==
+    * new operations: "bulkPrefix", "removePrefix"
+    * the space of deleted nodes can be reused
+    * huge values are compressed with QuickLZ
+    * new operation: "optimize", which can swap top-level nodes to memory-map region
+    * "prefix" has new parameter to specify pairs' order
+    * a paging bug fixed.
+    * a bug of "bulkPut" fixed.
+
 ==Version2.0 Beta2==
     * support bulk operations: bulkPut and bulkGet (pretty fast)
     * value less than 4Bytes(e.g. Integer) has a copy in index file, no file seek needed.
