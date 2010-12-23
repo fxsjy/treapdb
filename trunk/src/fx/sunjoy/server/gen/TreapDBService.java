@@ -58,6 +58,8 @@ public class TreapDBService {
 
     public boolean removePrefix(String key) throws TException;
 
+    public void optimize(int amount) throws TException;
+
   }
 
   public interface AsyncIface {
@@ -89,6 +91,8 @@ public class TreapDBService {
     public void remove(String key, AsyncMethodCallback<AsyncClient.remove_call> resultHandler) throws TException;
 
     public void removePrefix(String key, AsyncMethodCallback<AsyncClient.removePrefix_call> resultHandler) throws TException;
+
+    public void optimize(int amount, AsyncMethodCallback<AsyncClient.optimize_call> resultHandler) throws TException;
 
   }
 
@@ -637,6 +641,39 @@ public class TreapDBService {
       throw new TApplicationException(TApplicationException.MISSING_RESULT, "removePrefix failed: unknown result");
     }
 
+    public void optimize(int amount) throws TException
+    {
+      send_optimize(amount);
+      recv_optimize();
+    }
+
+    public void send_optimize(int amount) throws TException
+    {
+      oprot_.writeMessageBegin(new TMessage("optimize", TMessageType.CALL, ++seqid_));
+      optimize_args args = new optimize_args();
+      args.setAmount(amount);
+      args.write(oprot_);
+      oprot_.writeMessageEnd();
+      oprot_.getTransport().flush();
+    }
+
+    public void recv_optimize() throws TException
+    {
+      TMessage msg = iprot_.readMessageBegin();
+      if (msg.type == TMessageType.EXCEPTION) {
+        TApplicationException x = TApplicationException.read(iprot_);
+        iprot_.readMessageEnd();
+        throw x;
+      }
+      if (msg.seqid != seqid_) {
+        throw new TApplicationException(TApplicationException.BAD_SEQUENCE_ID, "optimize failed: out of sequence response");
+      }
+      optimize_result result = new optimize_result();
+      result.read(iprot_);
+      iprot_.readMessageEnd();
+      return;
+    }
+
   }
   public static class AsyncClient extends TAsyncClient implements AsyncIface {
     public static class Factory implements TAsyncClientFactory<AsyncClient> {
@@ -1119,6 +1156,37 @@ public class TreapDBService {
       }
     }
 
+    public void optimize(int amount, AsyncMethodCallback<optimize_call> resultHandler) throws TException {
+      checkReady();
+      optimize_call method_call = new optimize_call(amount, resultHandler, this, protocolFactory, transport);
+      manager.call(method_call);
+    }
+
+    public static class optimize_call extends TAsyncMethodCall {
+      private int amount;
+      public optimize_call(int amount, AsyncMethodCallback<optimize_call> resultHandler, TAsyncClient client, TProtocolFactory protocolFactory, TNonblockingTransport transport) throws TException {
+        super(client, protocolFactory, transport, resultHandler, false);
+        this.amount = amount;
+      }
+
+      public void write_args(TProtocol prot) throws TException {
+        prot.writeMessageBegin(new TMessage("optimize", TMessageType.CALL, 0));
+        optimize_args args = new optimize_args();
+        args.setAmount(amount);
+        args.write(prot);
+        prot.writeMessageEnd();
+      }
+
+      public void getResult() throws TException {
+        if (getState() != State.RESPONSE_READ) {
+          throw new IllegalStateException("Method call not finished!");
+        }
+        TMemoryInputTransport memoryTransport = new TMemoryInputTransport(getFrameBuffer().array());
+        TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
+        (new Client(prot)).recv_optimize();
+      }
+    }
+
   }
 
   public static class Processor implements TProcessor {
@@ -1140,6 +1208,7 @@ public class TreapDBService {
       processMap_.put("length", new length());
       processMap_.put("remove", new remove());
       processMap_.put("removePrefix", new removePrefix());
+      processMap_.put("optimize", new optimize());
     }
 
     protected static interface ProcessFunction {
@@ -1527,6 +1596,32 @@ public class TreapDBService {
         result.success = iface_.removePrefix(args.key);
         result.setSuccessIsSet(true);
         oprot.writeMessageBegin(new TMessage("removePrefix", TMessageType.REPLY, seqid));
+        result.write(oprot);
+        oprot.writeMessageEnd();
+        oprot.getTransport().flush();
+      }
+
+    }
+
+    private class optimize implements ProcessFunction {
+      public void process(int seqid, TProtocol iprot, TProtocol oprot) throws TException
+      {
+        optimize_args args = new optimize_args();
+        try {
+          args.read(iprot);
+        } catch (TProtocolException e) {
+          iprot.readMessageEnd();
+          TApplicationException x = new TApplicationException(TApplicationException.PROTOCOL_ERROR, e.getMessage());
+          oprot.writeMessageBegin(new TMessage("optimize", TMessageType.EXCEPTION, seqid));
+          x.write(oprot);
+          oprot.writeMessageEnd();
+          oprot.getTransport().flush();
+          return;
+        }
+        iprot.readMessageEnd();
+        optimize_result result = new optimize_result();
+        iface_.optimize(args.amount);
+        oprot.writeMessageBegin(new TMessage("optimize", TMessageType.REPLY, seqid));
         result.write(oprot);
         oprot.writeMessageEnd();
         oprot.getTransport().flush();
@@ -10496,6 +10591,470 @@ public class TreapDBService {
       sb.append("success:");
       sb.append(this.success);
       first = false;
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws TException {
+      // check for required fields
+    }
+
+  }
+
+  public static class optimize_args implements TBase<optimize_args, optimize_args._Fields>, java.io.Serializable, Cloneable   {
+    private static final TStruct STRUCT_DESC = new TStruct("optimize_args");
+
+    private static final TField AMOUNT_FIELD_DESC = new TField("amount", TType.I32, (short)1);
+
+    public int amount;
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements TFieldIdEnum {
+      AMOUNT((short)1, "amount");
+
+      private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
+
+      static {
+        for (_Fields field : EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          case 1: // AMOUNT
+            return AMOUNT;
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final String _fieldName;
+
+      _Fields(short thriftId, String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public String getFieldName() {
+        return _fieldName;
+      }
+    }
+
+    // isset id assignments
+    private static final int __AMOUNT_ISSET_ID = 0;
+    private BitSet __isset_bit_vector = new BitSet(1);
+
+    public static final Map<_Fields, FieldMetaData> metaDataMap;
+    static {
+      Map<_Fields, FieldMetaData> tmpMap = new EnumMap<_Fields, FieldMetaData>(_Fields.class);
+      tmpMap.put(_Fields.AMOUNT, new FieldMetaData("amount", TFieldRequirementType.DEFAULT, 
+          new FieldValueMetaData(TType.I32)));
+      metaDataMap = Collections.unmodifiableMap(tmpMap);
+      FieldMetaData.addStructMetaDataMap(optimize_args.class, metaDataMap);
+    }
+
+    public optimize_args() {
+    }
+
+    public optimize_args(
+      int amount)
+    {
+      this();
+      this.amount = amount;
+      setAmountIsSet(true);
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public optimize_args(optimize_args other) {
+      __isset_bit_vector.clear();
+      __isset_bit_vector.or(other.__isset_bit_vector);
+      this.amount = other.amount;
+    }
+
+    public optimize_args deepCopy() {
+      return new optimize_args(this);
+    }
+
+    @Override
+    public void clear() {
+      setAmountIsSet(false);
+      this.amount = 0;
+    }
+
+    public int getAmount() {
+      return this.amount;
+    }
+
+    public optimize_args setAmount(int amount) {
+      this.amount = amount;
+      setAmountIsSet(true);
+      return this;
+    }
+
+    public void unsetAmount() {
+      __isset_bit_vector.clear(__AMOUNT_ISSET_ID);
+    }
+
+    /** Returns true if field amount is set (has been asigned a value) and false otherwise */
+    public boolean isSetAmount() {
+      return __isset_bit_vector.get(__AMOUNT_ISSET_ID);
+    }
+
+    public void setAmountIsSet(boolean value) {
+      __isset_bit_vector.set(__AMOUNT_ISSET_ID, value);
+    }
+
+    public void setFieldValue(_Fields field, Object value) {
+      switch (field) {
+      case AMOUNT:
+        if (value == null) {
+          unsetAmount();
+        } else {
+          setAmount((Integer)value);
+        }
+        break;
+
+      }
+    }
+
+    public Object getFieldValue(_Fields field) {
+      switch (field) {
+      case AMOUNT:
+        return new Integer(getAmount());
+
+      }
+      throw new IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been asigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new IllegalArgumentException();
+      }
+
+      switch (field) {
+      case AMOUNT:
+        return isSetAmount();
+      }
+      throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof optimize_args)
+        return this.equals((optimize_args)that);
+      return false;
+    }
+
+    public boolean equals(optimize_args that) {
+      if (that == null)
+        return false;
+
+      boolean this_present_amount = true;
+      boolean that_present_amount = true;
+      if (this_present_amount || that_present_amount) {
+        if (!(this_present_amount && that_present_amount))
+          return false;
+        if (this.amount != that.amount)
+          return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      return 0;
+    }
+
+    public int compareTo(optimize_args other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+      optimize_args typedOther = (optimize_args)other;
+
+      lastComparison = Boolean.valueOf(isSetAmount()).compareTo(typedOther.isSetAmount());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetAmount()) {
+        lastComparison = TBaseHelper.compareTo(this.amount, typedOther.amount);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(TProtocol iprot) throws TException {
+      TField field;
+      iprot.readStructBegin();
+      while (true)
+      {
+        field = iprot.readFieldBegin();
+        if (field.type == TType.STOP) { 
+          break;
+        }
+        switch (field.id) {
+          case 1: // AMOUNT
+            if (field.type == TType.I32) {
+              this.amount = iprot.readI32();
+              setAmountIsSet(true);
+            } else { 
+              TProtocolUtil.skip(iprot, field.type);
+            }
+            break;
+          default:
+            TProtocolUtil.skip(iprot, field.type);
+        }
+        iprot.readFieldEnd();
+      }
+      iprot.readStructEnd();
+
+      // check for required fields of primitive type, which can't be checked in the validate method
+      validate();
+    }
+
+    public void write(TProtocol oprot) throws TException {
+      validate();
+
+      oprot.writeStructBegin(STRUCT_DESC);
+      oprot.writeFieldBegin(AMOUNT_FIELD_DESC);
+      oprot.writeI32(this.amount);
+      oprot.writeFieldEnd();
+      oprot.writeFieldStop();
+      oprot.writeStructEnd();
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder("optimize_args(");
+      boolean first = true;
+
+      sb.append("amount:");
+      sb.append(this.amount);
+      first = false;
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws TException {
+      // check for required fields
+    }
+
+  }
+
+  public static class optimize_result implements TBase<optimize_result, optimize_result._Fields>, java.io.Serializable, Cloneable   {
+    private static final TStruct STRUCT_DESC = new TStruct("optimize_result");
+
+
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements TFieldIdEnum {
+;
+
+      private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
+
+      static {
+        for (_Fields field : EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final String _fieldName;
+
+      _Fields(short thriftId, String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public String getFieldName() {
+        return _fieldName;
+      }
+    }
+    public static final Map<_Fields, FieldMetaData> metaDataMap;
+    static {
+      Map<_Fields, FieldMetaData> tmpMap = new EnumMap<_Fields, FieldMetaData>(_Fields.class);
+      metaDataMap = Collections.unmodifiableMap(tmpMap);
+      FieldMetaData.addStructMetaDataMap(optimize_result.class, metaDataMap);
+    }
+
+    public optimize_result() {
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public optimize_result(optimize_result other) {
+    }
+
+    public optimize_result deepCopy() {
+      return new optimize_result(this);
+    }
+
+    @Override
+    public void clear() {
+    }
+
+    public void setFieldValue(_Fields field, Object value) {
+      switch (field) {
+      }
+    }
+
+    public Object getFieldValue(_Fields field) {
+      switch (field) {
+      }
+      throw new IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been asigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new IllegalArgumentException();
+      }
+
+      switch (field) {
+      }
+      throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof optimize_result)
+        return this.equals((optimize_result)that);
+      return false;
+    }
+
+    public boolean equals(optimize_result that) {
+      if (that == null)
+        return false;
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      return 0;
+    }
+
+    public int compareTo(optimize_result other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+      optimize_result typedOther = (optimize_result)other;
+
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(TProtocol iprot) throws TException {
+      TField field;
+      iprot.readStructBegin();
+      while (true)
+      {
+        field = iprot.readFieldBegin();
+        if (field.type == TType.STOP) { 
+          break;
+        }
+        switch (field.id) {
+          default:
+            TProtocolUtil.skip(iprot, field.type);
+        }
+        iprot.readFieldEnd();
+      }
+      iprot.readStructEnd();
+
+      // check for required fields of primitive type, which can't be checked in the validate method
+      validate();
+    }
+
+    public void write(TProtocol oprot) throws TException {
+      oprot.writeStructBegin(STRUCT_DESC);
+
+      oprot.writeFieldStop();
+      oprot.writeStructEnd();
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder("optimize_result(");
+      boolean first = true;
+
       sb.append(")");
       return sb.toString();
     }
