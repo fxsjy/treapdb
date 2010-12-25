@@ -222,6 +222,9 @@ public class BlockUtil<K extends Comparable<K>,V extends Serializable> {
 	
 	private void putBytes(FileChannel ch,long startPoint,ByteBuffer data) throws IOException{
 		if(startPoint+data.limit()>INIT_INDEX_MMAP_SIZE){
+			if(startPoint+data.limit()>=ch.size()){//如果超出内存映射范围，把索引文件先扩展1倍
+				ch.write(ByteBuffer.wrap(new byte[]{0}),ch.size()*2);
+			}
 			ch.write(data,startPoint);
 			return;
 		}
