@@ -45,6 +45,9 @@ public class TreapDBBinaryProtocolServer implements Iface{
 		tr_server.serve();
 	}
 	
+	public synchronized void close(){
+		tr_server.stop();
+	}
 	@Override
 	public void put(String key, ByteBuffer value) throws TException {
 		

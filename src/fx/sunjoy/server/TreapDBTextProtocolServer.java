@@ -40,6 +40,9 @@ public class TreapDBTextProtocolServer {
 
 	ServerSocket serverSocket;
 	int port;
+	
+	private boolean stopped = false;
+	
 	private ExecutorService pool = Executors.newCachedThreadPool();
 	
 	public TreapDBTextProtocolServer(DiskTreap<FastString, byte[]> _diskTreap,int _port){
@@ -154,7 +157,7 @@ public class TreapDBTextProtocolServer {
 
 	public void run() throws IOException{
 		serverSocket = new ServerSocket(port);
-		while(true){
+		while(!stopped){
 			final Socket clientSocket = serverSocket.accept();
 			System.out.println("client:"+clientSocket+" connected.");
 			//clientSocket.setKeepAlive(true);
@@ -168,6 +171,11 @@ public class TreapDBTextProtocolServer {
 		}
 	}
 
+	public synchronized void close(){
+		stopped = true;
+		pool.shutdown();
+	}
+	
 	public void setReplicationRole(String replicationRole) {
 		this.replicationRole = replicationRole;
 	}
