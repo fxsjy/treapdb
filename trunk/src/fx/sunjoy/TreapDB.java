@@ -22,7 +22,7 @@ public class TreapDB {
 
 		if(args.length < 1)
 		{
-			System.out.println("java -cp . fx.sunjoy.TreapDB [configure file path]") ;
+			System.out.println("./treapdb.sh [configure file path]") ;
 			return ;
 		}
 		
@@ -50,6 +50,8 @@ public class TreapDB {
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 		      public void run() {
 		        System.out.println("Running Shutdown Hook");
+		        Textserver.close();
+		        ThriftServer.close();
 		        diskTreap.close();
 		      }
 	    });
