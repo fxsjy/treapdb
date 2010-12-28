@@ -2,6 +2,7 @@ package fx.sunjoy.algo;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 public interface ITreap<K extends Comparable<K>, V> {
 
@@ -39,5 +40,8 @@ public interface ITreap<K extends Comparable<K>, V> {
 	public Map<K,V> kmin(int k);
 	
 	public Map<K,V> kmax(int k);
+	
+	public Entry<K, V> kth(int k,boolean asc);
 
+	public int rank(K key,boolean asc);
 }

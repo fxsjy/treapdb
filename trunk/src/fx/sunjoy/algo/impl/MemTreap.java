@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.Map.Entry;
 
 import fx.sunjoy.algo.ITreap;
 
@@ -277,6 +278,18 @@ public class MemTreap<K extends Comparable<K>,V> implements ITreap<K, V>  {
 	public boolean removePrefix(K prefixString) {
 		// TODO Auto-generated method stub
 		return false;
+	}
+
+	@Override
+	public Entry<K, V> kth(int k, boolean asc) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public int rank(K key, boolean asc) {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 
 	

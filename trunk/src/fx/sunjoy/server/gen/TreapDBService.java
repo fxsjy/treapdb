@@ -46,7 +46,11 @@ public class TreapDBService {
 
     public List<Pair> kmin(int k) throws TException;
 
+    public Pair kth(int k, boolean asc) throws TException;
+
     public List<Pair> range(String kStart, String kEnd, int limit) throws TException;
+
+    public int rank(String key, boolean asc) throws TException;
 
     public List<Pair> before(String key, int limit) throws TException;
 
@@ -80,7 +84,11 @@ public class TreapDBService {
 
     public void kmin(int k, AsyncMethodCallback<AsyncClient.kmin_call> resultHandler) throws TException;
 
+    public void kth(int k, boolean asc, AsyncMethodCallback<AsyncClient.kth_call> resultHandler) throws TException;
+
     public void range(String kStart, String kEnd, int limit, AsyncMethodCallback<AsyncClient.range_call> resultHandler) throws TException;
+
+    public void rank(String key, boolean asc, AsyncMethodCallback<AsyncClient.rank_call> resultHandler) throws TException;
 
     public void before(String key, int limit, AsyncMethodCallback<AsyncClient.before_call> resultHandler) throws TException;
 
@@ -422,6 +430,43 @@ public class TreapDBService {
       throw new TApplicationException(TApplicationException.MISSING_RESULT, "kmin failed: unknown result");
     }
 
+    public Pair kth(int k, boolean asc) throws TException
+    {
+      send_kth(k, asc);
+      return recv_kth();
+    }
+
+    public void send_kth(int k, boolean asc) throws TException
+    {
+      oprot_.writeMessageBegin(new TMessage("kth", TMessageType.CALL, ++seqid_));
+      kth_args args = new kth_args();
+      args.setK(k);
+      args.setAsc(asc);
+      args.write(oprot_);
+      oprot_.writeMessageEnd();
+      oprot_.getTransport().flush();
+    }
+
+    public Pair recv_kth() throws TException
+    {
+      TMessage msg = iprot_.readMessageBegin();
+      if (msg.type == TMessageType.EXCEPTION) {
+        TApplicationException x = TApplicationException.read(iprot_);
+        iprot_.readMessageEnd();
+        throw x;
+      }
+      if (msg.seqid != seqid_) {
+        throw new TApplicationException(TApplicationException.BAD_SEQUENCE_ID, "kth failed: out of sequence response");
+      }
+      kth_result result = new kth_result();
+      result.read(iprot_);
+      iprot_.readMessageEnd();
+      if (result.isSetSuccess()) {
+        return result.success;
+      }
+      throw new TApplicationException(TApplicationException.MISSING_RESULT, "kth failed: unknown result");
+    }
+
     public List<Pair> range(String kStart, String kEnd, int limit) throws TException
     {
       send_range(kStart, kEnd, limit);
@@ -458,6 +503,43 @@ public class TreapDBService {
         return result.success;
       }
       throw new TApplicationException(TApplicationException.MISSING_RESULT, "range failed: unknown result");
+    }
+
+    public int rank(String key, boolean asc) throws TException
+    {
+      send_rank(key, asc);
+      return recv_rank();
+    }
+
+    public void send_rank(String key, boolean asc) throws TException
+    {
+      oprot_.writeMessageBegin(new TMessage("rank", TMessageType.CALL, ++seqid_));
+      rank_args args = new rank_args();
+      args.setKey(key);
+      args.setAsc(asc);
+      args.write(oprot_);
+      oprot_.writeMessageEnd();
+      oprot_.getTransport().flush();
+    }
+
+    public int recv_rank() throws TException
+    {
+      TMessage msg = iprot_.readMessageBegin();
+      if (msg.type == TMessageType.EXCEPTION) {
+        TApplicationException x = TApplicationException.read(iprot_);
+        iprot_.readMessageEnd();
+        throw x;
+      }
+      if (msg.seqid != seqid_) {
+        throw new TApplicationException(TApplicationException.BAD_SEQUENCE_ID, "rank failed: out of sequence response");
+      }
+      rank_result result = new rank_result();
+      result.read(iprot_);
+      iprot_.readMessageEnd();
+      if (result.isSetSuccess()) {
+        return result.success;
+      }
+      throw new TApplicationException(TApplicationException.MISSING_RESULT, "rank failed: unknown result");
     }
 
     public List<Pair> before(String key, int limit) throws TException
@@ -961,6 +1043,40 @@ public class TreapDBService {
       }
     }
 
+    public void kth(int k, boolean asc, AsyncMethodCallback<kth_call> resultHandler) throws TException {
+      checkReady();
+      kth_call method_call = new kth_call(k, asc, resultHandler, this, protocolFactory, transport);
+      manager.call(method_call);
+    }
+
+    public static class kth_call extends TAsyncMethodCall {
+      private int k;
+      private boolean asc;
+      public kth_call(int k, boolean asc, AsyncMethodCallback<kth_call> resultHandler, TAsyncClient client, TProtocolFactory protocolFactory, TNonblockingTransport transport) throws TException {
+        super(client, protocolFactory, transport, resultHandler, false);
+        this.k = k;
+        this.asc = asc;
+      }
+
+      public void write_args(TProtocol prot) throws TException {
+        prot.writeMessageBegin(new TMessage("kth", TMessageType.CALL, 0));
+        kth_args args = new kth_args();
+        args.setK(k);
+        args.setAsc(asc);
+        args.write(prot);
+        prot.writeMessageEnd();
+      }
+
+      public Pair getResult() throws TException {
+        if (getState() != State.RESPONSE_READ) {
+          throw new IllegalStateException("Method call not finished!");
+        }
+        TMemoryInputTransport memoryTransport = new TMemoryInputTransport(getFrameBuffer().array());
+        TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
+        return (new Client(prot)).recv_kth();
+      }
+    }
+
     public void range(String kStart, String kEnd, int limit, AsyncMethodCallback<range_call> resultHandler) throws TException {
       checkReady();
       range_call method_call = new range_call(kStart, kEnd, limit, resultHandler, this, protocolFactory, transport);
@@ -995,6 +1111,40 @@ public class TreapDBService {
         TMemoryInputTransport memoryTransport = new TMemoryInputTransport(getFrameBuffer().array());
         TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
         return (new Client(prot)).recv_range();
+      }
+    }
+
+    public void rank(String key, boolean asc, AsyncMethodCallback<rank_call> resultHandler) throws TException {
+      checkReady();
+      rank_call method_call = new rank_call(key, asc, resultHandler, this, protocolFactory, transport);
+      manager.call(method_call);
+    }
+
+    public static class rank_call extends TAsyncMethodCall {
+      private String key;
+      private boolean asc;
+      public rank_call(String key, boolean asc, AsyncMethodCallback<rank_call> resultHandler, TAsyncClient client, TProtocolFactory protocolFactory, TNonblockingTransport transport) throws TException {
+        super(client, protocolFactory, transport, resultHandler, false);
+        this.key = key;
+        this.asc = asc;
+      }
+
+      public void write_args(TProtocol prot) throws TException {
+        prot.writeMessageBegin(new TMessage("rank", TMessageType.CALL, 0));
+        rank_args args = new rank_args();
+        args.setKey(key);
+        args.setAsc(asc);
+        args.write(prot);
+        prot.writeMessageEnd();
+      }
+
+      public int getResult() throws TException {
+        if (getState() != State.RESPONSE_READ) {
+          throw new IllegalStateException("Method call not finished!");
+        }
+        TMemoryInputTransport memoryTransport = new TMemoryInputTransport(getFrameBuffer().array());
+        TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
+        return (new Client(prot)).recv_rank();
       }
     }
 
@@ -1202,7 +1352,9 @@ public class TreapDBService {
       processMap_.put("bulkPrefix", new bulkPrefix());
       processMap_.put("kmax", new kmax());
       processMap_.put("kmin", new kmin());
+      processMap_.put("kth", new kth());
       processMap_.put("range", new range());
+      processMap_.put("rank", new rank());
       processMap_.put("before", new before());
       processMap_.put("after", new after());
       processMap_.put("length", new length());
@@ -1444,6 +1596,32 @@ public class TreapDBService {
 
     }
 
+    private class kth implements ProcessFunction {
+      public void process(int seqid, TProtocol iprot, TProtocol oprot) throws TException
+      {
+        kth_args args = new kth_args();
+        try {
+          args.read(iprot);
+        } catch (TProtocolException e) {
+          iprot.readMessageEnd();
+          TApplicationException x = new TApplicationException(TApplicationException.PROTOCOL_ERROR, e.getMessage());
+          oprot.writeMessageBegin(new TMessage("kth", TMessageType.EXCEPTION, seqid));
+          x.write(oprot);
+          oprot.writeMessageEnd();
+          oprot.getTransport().flush();
+          return;
+        }
+        iprot.readMessageEnd();
+        kth_result result = new kth_result();
+        result.success = iface_.kth(args.k, args.asc);
+        oprot.writeMessageBegin(new TMessage("kth", TMessageType.REPLY, seqid));
+        result.write(oprot);
+        oprot.writeMessageEnd();
+        oprot.getTransport().flush();
+      }
+
+    }
+
     private class range implements ProcessFunction {
       public void process(int seqid, TProtocol iprot, TProtocol oprot) throws TException
       {
@@ -1463,6 +1641,33 @@ public class TreapDBService {
         range_result result = new range_result();
         result.success = iface_.range(args.kStart, args.kEnd, args.limit);
         oprot.writeMessageBegin(new TMessage("range", TMessageType.REPLY, seqid));
+        result.write(oprot);
+        oprot.writeMessageEnd();
+        oprot.getTransport().flush();
+      }
+
+    }
+
+    private class rank implements ProcessFunction {
+      public void process(int seqid, TProtocol iprot, TProtocol oprot) throws TException
+      {
+        rank_args args = new rank_args();
+        try {
+          args.read(iprot);
+        } catch (TProtocolException e) {
+          iprot.readMessageEnd();
+          TApplicationException x = new TApplicationException(TApplicationException.PROTOCOL_ERROR, e.getMessage());
+          oprot.writeMessageBegin(new TMessage("rank", TMessageType.EXCEPTION, seqid));
+          x.write(oprot);
+          oprot.writeMessageEnd();
+          oprot.getTransport().flush();
+          return;
+        }
+        iprot.readMessageEnd();
+        rank_result result = new rank_result();
+        result.success = iface_.rank(args.key, args.asc);
+        result.setSuccessIsSet(true);
+        oprot.writeMessageBegin(new TMessage("rank", TMessageType.REPLY, seqid));
         result.write(oprot);
         oprot.writeMessageEnd();
         oprot.getTransport().flush();
@@ -6866,6 +7071,650 @@ public class TreapDBService {
 
   }
 
+  public static class kth_args implements TBase<kth_args, kth_args._Fields>, java.io.Serializable, Cloneable   {
+    private static final TStruct STRUCT_DESC = new TStruct("kth_args");
+
+    private static final TField K_FIELD_DESC = new TField("k", TType.I32, (short)1);
+    private static final TField ASC_FIELD_DESC = new TField("asc", TType.BOOL, (short)2);
+
+    public int k;
+    public boolean asc;
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements TFieldIdEnum {
+      K((short)1, "k"),
+      ASC((short)2, "asc");
+
+      private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
+
+      static {
+        for (_Fields field : EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          case 1: // K
+            return K;
+          case 2: // ASC
+            return ASC;
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final String _fieldName;
+
+      _Fields(short thriftId, String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public String getFieldName() {
+        return _fieldName;
+      }
+    }
+
+    // isset id assignments
+    private static final int __K_ISSET_ID = 0;
+    private static final int __ASC_ISSET_ID = 1;
+    private BitSet __isset_bit_vector = new BitSet(2);
+
+    public static final Map<_Fields, FieldMetaData> metaDataMap;
+    static {
+      Map<_Fields, FieldMetaData> tmpMap = new EnumMap<_Fields, FieldMetaData>(_Fields.class);
+      tmpMap.put(_Fields.K, new FieldMetaData("k", TFieldRequirementType.DEFAULT, 
+          new FieldValueMetaData(TType.I32)));
+      tmpMap.put(_Fields.ASC, new FieldMetaData("asc", TFieldRequirementType.DEFAULT, 
+          new FieldValueMetaData(TType.BOOL)));
+      metaDataMap = Collections.unmodifiableMap(tmpMap);
+      FieldMetaData.addStructMetaDataMap(kth_args.class, metaDataMap);
+    }
+
+    public kth_args() {
+    }
+
+    public kth_args(
+      int k,
+      boolean asc)
+    {
+      this();
+      this.k = k;
+      setKIsSet(true);
+      this.asc = asc;
+      setAscIsSet(true);
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public kth_args(kth_args other) {
+      __isset_bit_vector.clear();
+      __isset_bit_vector.or(other.__isset_bit_vector);
+      this.k = other.k;
+      this.asc = other.asc;
+    }
+
+    public kth_args deepCopy() {
+      return new kth_args(this);
+    }
+
+    @Override
+    public void clear() {
+      setKIsSet(false);
+      this.k = 0;
+      setAscIsSet(false);
+      this.asc = false;
+    }
+
+    public int getK() {
+      return this.k;
+    }
+
+    public kth_args setK(int k) {
+      this.k = k;
+      setKIsSet(true);
+      return this;
+    }
+
+    public void unsetK() {
+      __isset_bit_vector.clear(__K_ISSET_ID);
+    }
+
+    /** Returns true if field k is set (has been asigned a value) and false otherwise */
+    public boolean isSetK() {
+      return __isset_bit_vector.get(__K_ISSET_ID);
+    }
+
+    public void setKIsSet(boolean value) {
+      __isset_bit_vector.set(__K_ISSET_ID, value);
+    }
+
+    public boolean isAsc() {
+      return this.asc;
+    }
+
+    public kth_args setAsc(boolean asc) {
+      this.asc = asc;
+      setAscIsSet(true);
+      return this;
+    }
+
+    public void unsetAsc() {
+      __isset_bit_vector.clear(__ASC_ISSET_ID);
+    }
+
+    /** Returns true if field asc is set (has been asigned a value) and false otherwise */
+    public boolean isSetAsc() {
+      return __isset_bit_vector.get(__ASC_ISSET_ID);
+    }
+
+    public void setAscIsSet(boolean value) {
+      __isset_bit_vector.set(__ASC_ISSET_ID, value);
+    }
+
+    public void setFieldValue(_Fields field, Object value) {
+      switch (field) {
+      case K:
+        if (value == null) {
+          unsetK();
+        } else {
+          setK((Integer)value);
+        }
+        break;
+
+      case ASC:
+        if (value == null) {
+          unsetAsc();
+        } else {
+          setAsc((Boolean)value);
+        }
+        break;
+
+      }
+    }
+
+    public Object getFieldValue(_Fields field) {
+      switch (field) {
+      case K:
+        return new Integer(getK());
+
+      case ASC:
+        return new Boolean(isAsc());
+
+      }
+      throw new IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been asigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new IllegalArgumentException();
+      }
+
+      switch (field) {
+      case K:
+        return isSetK();
+      case ASC:
+        return isSetAsc();
+      }
+      throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof kth_args)
+        return this.equals((kth_args)that);
+      return false;
+    }
+
+    public boolean equals(kth_args that) {
+      if (that == null)
+        return false;
+
+      boolean this_present_k = true;
+      boolean that_present_k = true;
+      if (this_present_k || that_present_k) {
+        if (!(this_present_k && that_present_k))
+          return false;
+        if (this.k != that.k)
+          return false;
+      }
+
+      boolean this_present_asc = true;
+      boolean that_present_asc = true;
+      if (this_present_asc || that_present_asc) {
+        if (!(this_present_asc && that_present_asc))
+          return false;
+        if (this.asc != that.asc)
+          return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      return 0;
+    }
+
+    public int compareTo(kth_args other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+      kth_args typedOther = (kth_args)other;
+
+      lastComparison = Boolean.valueOf(isSetK()).compareTo(typedOther.isSetK());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetK()) {
+        lastComparison = TBaseHelper.compareTo(this.k, typedOther.k);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      lastComparison = Boolean.valueOf(isSetAsc()).compareTo(typedOther.isSetAsc());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetAsc()) {
+        lastComparison = TBaseHelper.compareTo(this.asc, typedOther.asc);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(TProtocol iprot) throws TException {
+      TField field;
+      iprot.readStructBegin();
+      while (true)
+      {
+        field = iprot.readFieldBegin();
+        if (field.type == TType.STOP) { 
+          break;
+        }
+        switch (field.id) {
+          case 1: // K
+            if (field.type == TType.I32) {
+              this.k = iprot.readI32();
+              setKIsSet(true);
+            } else { 
+              TProtocolUtil.skip(iprot, field.type);
+            }
+            break;
+          case 2: // ASC
+            if (field.type == TType.BOOL) {
+              this.asc = iprot.readBool();
+              setAscIsSet(true);
+            } else { 
+              TProtocolUtil.skip(iprot, field.type);
+            }
+            break;
+          default:
+            TProtocolUtil.skip(iprot, field.type);
+        }
+        iprot.readFieldEnd();
+      }
+      iprot.readStructEnd();
+
+      // check for required fields of primitive type, which can't be checked in the validate method
+      validate();
+    }
+
+    public void write(TProtocol oprot) throws TException {
+      validate();
+
+      oprot.writeStructBegin(STRUCT_DESC);
+      oprot.writeFieldBegin(K_FIELD_DESC);
+      oprot.writeI32(this.k);
+      oprot.writeFieldEnd();
+      oprot.writeFieldBegin(ASC_FIELD_DESC);
+      oprot.writeBool(this.asc);
+      oprot.writeFieldEnd();
+      oprot.writeFieldStop();
+      oprot.writeStructEnd();
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder("kth_args(");
+      boolean first = true;
+
+      sb.append("k:");
+      sb.append(this.k);
+      first = false;
+      if (!first) sb.append(", ");
+      sb.append("asc:");
+      sb.append(this.asc);
+      first = false;
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws TException {
+      // check for required fields
+    }
+
+  }
+
+  public static class kth_result implements TBase<kth_result, kth_result._Fields>, java.io.Serializable, Cloneable   {
+    private static final TStruct STRUCT_DESC = new TStruct("kth_result");
+
+    private static final TField SUCCESS_FIELD_DESC = new TField("success", TType.STRUCT, (short)0);
+
+    public Pair success;
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements TFieldIdEnum {
+      SUCCESS((short)0, "success");
+
+      private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
+
+      static {
+        for (_Fields field : EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          case 0: // SUCCESS
+            return SUCCESS;
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final String _fieldName;
+
+      _Fields(short thriftId, String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public String getFieldName() {
+        return _fieldName;
+      }
+    }
+
+    // isset id assignments
+
+    public static final Map<_Fields, FieldMetaData> metaDataMap;
+    static {
+      Map<_Fields, FieldMetaData> tmpMap = new EnumMap<_Fields, FieldMetaData>(_Fields.class);
+      tmpMap.put(_Fields.SUCCESS, new FieldMetaData("success", TFieldRequirementType.DEFAULT, 
+          new StructMetaData(TType.STRUCT, Pair.class)));
+      metaDataMap = Collections.unmodifiableMap(tmpMap);
+      FieldMetaData.addStructMetaDataMap(kth_result.class, metaDataMap);
+    }
+
+    public kth_result() {
+    }
+
+    public kth_result(
+      Pair success)
+    {
+      this();
+      this.success = success;
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public kth_result(kth_result other) {
+      if (other.isSetSuccess()) {
+        this.success = new Pair(other.success);
+      }
+    }
+
+    public kth_result deepCopy() {
+      return new kth_result(this);
+    }
+
+    @Override
+    public void clear() {
+      this.success = null;
+    }
+
+    public Pair getSuccess() {
+      return this.success;
+    }
+
+    public kth_result setSuccess(Pair success) {
+      this.success = success;
+      return this;
+    }
+
+    public void unsetSuccess() {
+      this.success = null;
+    }
+
+    /** Returns true if field success is set (has been asigned a value) and false otherwise */
+    public boolean isSetSuccess() {
+      return this.success != null;
+    }
+
+    public void setSuccessIsSet(boolean value) {
+      if (!value) {
+        this.success = null;
+      }
+    }
+
+    public void setFieldValue(_Fields field, Object value) {
+      switch (field) {
+      case SUCCESS:
+        if (value == null) {
+          unsetSuccess();
+        } else {
+          setSuccess((Pair)value);
+        }
+        break;
+
+      }
+    }
+
+    public Object getFieldValue(_Fields field) {
+      switch (field) {
+      case SUCCESS:
+        return getSuccess();
+
+      }
+      throw new IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been asigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new IllegalArgumentException();
+      }
+
+      switch (field) {
+      case SUCCESS:
+        return isSetSuccess();
+      }
+      throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof kth_result)
+        return this.equals((kth_result)that);
+      return false;
+    }
+
+    public boolean equals(kth_result that) {
+      if (that == null)
+        return false;
+
+      boolean this_present_success = true && this.isSetSuccess();
+      boolean that_present_success = true && that.isSetSuccess();
+      if (this_present_success || that_present_success) {
+        if (!(this_present_success && that_present_success))
+          return false;
+        if (!this.success.equals(that.success))
+          return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      return 0;
+    }
+
+    public int compareTo(kth_result other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+      kth_result typedOther = (kth_result)other;
+
+      lastComparison = Boolean.valueOf(isSetSuccess()).compareTo(typedOther.isSetSuccess());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetSuccess()) {
+        lastComparison = TBaseHelper.compareTo(this.success, typedOther.success);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(TProtocol iprot) throws TException {
+      TField field;
+      iprot.readStructBegin();
+      while (true)
+      {
+        field = iprot.readFieldBegin();
+        if (field.type == TType.STOP) { 
+          break;
+        }
+        switch (field.id) {
+          case 0: // SUCCESS
+            if (field.type == TType.STRUCT) {
+              this.success = new Pair();
+              this.success.read(iprot);
+            } else { 
+              TProtocolUtil.skip(iprot, field.type);
+            }
+            break;
+          default:
+            TProtocolUtil.skip(iprot, field.type);
+        }
+        iprot.readFieldEnd();
+      }
+      iprot.readStructEnd();
+
+      // check for required fields of primitive type, which can't be checked in the validate method
+      validate();
+    }
+
+    public void write(TProtocol oprot) throws TException {
+      oprot.writeStructBegin(STRUCT_DESC);
+
+      if (this.isSetSuccess()) {
+        oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
+        this.success.write(oprot);
+        oprot.writeFieldEnd();
+      }
+      oprot.writeFieldStop();
+      oprot.writeStructEnd();
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder("kth_result(");
+      boolean first = true;
+
+      sb.append("success:");
+      if (this.success == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.success);
+      }
+      first = false;
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws TException {
+      // check for required fields
+    }
+
+  }
+
   public static class range_args implements TBase<range_args, range_args._Fields>, java.io.Serializable, Cloneable   {
     private static final TStruct STRUCT_DESC = new TStruct("range_args");
 
@@ -7630,6 +8479,654 @@ public class TreapDBService {
       } else {
         sb.append(this.success);
       }
+      first = false;
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws TException {
+      // check for required fields
+    }
+
+  }
+
+  public static class rank_args implements TBase<rank_args, rank_args._Fields>, java.io.Serializable, Cloneable   {
+    private static final TStruct STRUCT_DESC = new TStruct("rank_args");
+
+    private static final TField KEY_FIELD_DESC = new TField("key", TType.STRING, (short)1);
+    private static final TField ASC_FIELD_DESC = new TField("asc", TType.BOOL, (short)2);
+
+    public String key;
+    public boolean asc;
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements TFieldIdEnum {
+      KEY((short)1, "key"),
+      ASC((short)2, "asc");
+
+      private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
+
+      static {
+        for (_Fields field : EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          case 1: // KEY
+            return KEY;
+          case 2: // ASC
+            return ASC;
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final String _fieldName;
+
+      _Fields(short thriftId, String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public String getFieldName() {
+        return _fieldName;
+      }
+    }
+
+    // isset id assignments
+    private static final int __ASC_ISSET_ID = 0;
+    private BitSet __isset_bit_vector = new BitSet(1);
+
+    public static final Map<_Fields, FieldMetaData> metaDataMap;
+    static {
+      Map<_Fields, FieldMetaData> tmpMap = new EnumMap<_Fields, FieldMetaData>(_Fields.class);
+      tmpMap.put(_Fields.KEY, new FieldMetaData("key", TFieldRequirementType.DEFAULT, 
+          new FieldValueMetaData(TType.STRING)));
+      tmpMap.put(_Fields.ASC, new FieldMetaData("asc", TFieldRequirementType.DEFAULT, 
+          new FieldValueMetaData(TType.BOOL)));
+      metaDataMap = Collections.unmodifiableMap(tmpMap);
+      FieldMetaData.addStructMetaDataMap(rank_args.class, metaDataMap);
+    }
+
+    public rank_args() {
+    }
+
+    public rank_args(
+      String key,
+      boolean asc)
+    {
+      this();
+      this.key = key;
+      this.asc = asc;
+      setAscIsSet(true);
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public rank_args(rank_args other) {
+      __isset_bit_vector.clear();
+      __isset_bit_vector.or(other.__isset_bit_vector);
+      if (other.isSetKey()) {
+        this.key = other.key;
+      }
+      this.asc = other.asc;
+    }
+
+    public rank_args deepCopy() {
+      return new rank_args(this);
+    }
+
+    @Override
+    public void clear() {
+      this.key = null;
+      setAscIsSet(false);
+      this.asc = false;
+    }
+
+    public String getKey() {
+      return this.key;
+    }
+
+    public rank_args setKey(String key) {
+      this.key = key;
+      return this;
+    }
+
+    public void unsetKey() {
+      this.key = null;
+    }
+
+    /** Returns true if field key is set (has been asigned a value) and false otherwise */
+    public boolean isSetKey() {
+      return this.key != null;
+    }
+
+    public void setKeyIsSet(boolean value) {
+      if (!value) {
+        this.key = null;
+      }
+    }
+
+    public boolean isAsc() {
+      return this.asc;
+    }
+
+    public rank_args setAsc(boolean asc) {
+      this.asc = asc;
+      setAscIsSet(true);
+      return this;
+    }
+
+    public void unsetAsc() {
+      __isset_bit_vector.clear(__ASC_ISSET_ID);
+    }
+
+    /** Returns true if field asc is set (has been asigned a value) and false otherwise */
+    public boolean isSetAsc() {
+      return __isset_bit_vector.get(__ASC_ISSET_ID);
+    }
+
+    public void setAscIsSet(boolean value) {
+      __isset_bit_vector.set(__ASC_ISSET_ID, value);
+    }
+
+    public void setFieldValue(_Fields field, Object value) {
+      switch (field) {
+      case KEY:
+        if (value == null) {
+          unsetKey();
+        } else {
+          setKey((String)value);
+        }
+        break;
+
+      case ASC:
+        if (value == null) {
+          unsetAsc();
+        } else {
+          setAsc((Boolean)value);
+        }
+        break;
+
+      }
+    }
+
+    public Object getFieldValue(_Fields field) {
+      switch (field) {
+      case KEY:
+        return getKey();
+
+      case ASC:
+        return new Boolean(isAsc());
+
+      }
+      throw new IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been asigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new IllegalArgumentException();
+      }
+
+      switch (field) {
+      case KEY:
+        return isSetKey();
+      case ASC:
+        return isSetAsc();
+      }
+      throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof rank_args)
+        return this.equals((rank_args)that);
+      return false;
+    }
+
+    public boolean equals(rank_args that) {
+      if (that == null)
+        return false;
+
+      boolean this_present_key = true && this.isSetKey();
+      boolean that_present_key = true && that.isSetKey();
+      if (this_present_key || that_present_key) {
+        if (!(this_present_key && that_present_key))
+          return false;
+        if (!this.key.equals(that.key))
+          return false;
+      }
+
+      boolean this_present_asc = true;
+      boolean that_present_asc = true;
+      if (this_present_asc || that_present_asc) {
+        if (!(this_present_asc && that_present_asc))
+          return false;
+        if (this.asc != that.asc)
+          return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      return 0;
+    }
+
+    public int compareTo(rank_args other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+      rank_args typedOther = (rank_args)other;
+
+      lastComparison = Boolean.valueOf(isSetKey()).compareTo(typedOther.isSetKey());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetKey()) {
+        lastComparison = TBaseHelper.compareTo(this.key, typedOther.key);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      lastComparison = Boolean.valueOf(isSetAsc()).compareTo(typedOther.isSetAsc());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetAsc()) {
+        lastComparison = TBaseHelper.compareTo(this.asc, typedOther.asc);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(TProtocol iprot) throws TException {
+      TField field;
+      iprot.readStructBegin();
+      while (true)
+      {
+        field = iprot.readFieldBegin();
+        if (field.type == TType.STOP) { 
+          break;
+        }
+        switch (field.id) {
+          case 1: // KEY
+            if (field.type == TType.STRING) {
+              this.key = iprot.readString();
+            } else { 
+              TProtocolUtil.skip(iprot, field.type);
+            }
+            break;
+          case 2: // ASC
+            if (field.type == TType.BOOL) {
+              this.asc = iprot.readBool();
+              setAscIsSet(true);
+            } else { 
+              TProtocolUtil.skip(iprot, field.type);
+            }
+            break;
+          default:
+            TProtocolUtil.skip(iprot, field.type);
+        }
+        iprot.readFieldEnd();
+      }
+      iprot.readStructEnd();
+
+      // check for required fields of primitive type, which can't be checked in the validate method
+      validate();
+    }
+
+    public void write(TProtocol oprot) throws TException {
+      validate();
+
+      oprot.writeStructBegin(STRUCT_DESC);
+      if (this.key != null) {
+        oprot.writeFieldBegin(KEY_FIELD_DESC);
+        oprot.writeString(this.key);
+        oprot.writeFieldEnd();
+      }
+      oprot.writeFieldBegin(ASC_FIELD_DESC);
+      oprot.writeBool(this.asc);
+      oprot.writeFieldEnd();
+      oprot.writeFieldStop();
+      oprot.writeStructEnd();
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder("rank_args(");
+      boolean first = true;
+
+      sb.append("key:");
+      if (this.key == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.key);
+      }
+      first = false;
+      if (!first) sb.append(", ");
+      sb.append("asc:");
+      sb.append(this.asc);
+      first = false;
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws TException {
+      // check for required fields
+    }
+
+  }
+
+  public static class rank_result implements TBase<rank_result, rank_result._Fields>, java.io.Serializable, Cloneable   {
+    private static final TStruct STRUCT_DESC = new TStruct("rank_result");
+
+    private static final TField SUCCESS_FIELD_DESC = new TField("success", TType.I32, (short)0);
+
+    public int success;
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements TFieldIdEnum {
+      SUCCESS((short)0, "success");
+
+      private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
+
+      static {
+        for (_Fields field : EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          case 0: // SUCCESS
+            return SUCCESS;
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final String _fieldName;
+
+      _Fields(short thriftId, String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public String getFieldName() {
+        return _fieldName;
+      }
+    }
+
+    // isset id assignments
+    private static final int __SUCCESS_ISSET_ID = 0;
+    private BitSet __isset_bit_vector = new BitSet(1);
+
+    public static final Map<_Fields, FieldMetaData> metaDataMap;
+    static {
+      Map<_Fields, FieldMetaData> tmpMap = new EnumMap<_Fields, FieldMetaData>(_Fields.class);
+      tmpMap.put(_Fields.SUCCESS, new FieldMetaData("success", TFieldRequirementType.DEFAULT, 
+          new FieldValueMetaData(TType.I32)));
+      metaDataMap = Collections.unmodifiableMap(tmpMap);
+      FieldMetaData.addStructMetaDataMap(rank_result.class, metaDataMap);
+    }
+
+    public rank_result() {
+    }
+
+    public rank_result(
+      int success)
+    {
+      this();
+      this.success = success;
+      setSuccessIsSet(true);
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public rank_result(rank_result other) {
+      __isset_bit_vector.clear();
+      __isset_bit_vector.or(other.__isset_bit_vector);
+      this.success = other.success;
+    }
+
+    public rank_result deepCopy() {
+      return new rank_result(this);
+    }
+
+    @Override
+    public void clear() {
+      setSuccessIsSet(false);
+      this.success = 0;
+    }
+
+    public int getSuccess() {
+      return this.success;
+    }
+
+    public rank_result setSuccess(int success) {
+      this.success = success;
+      setSuccessIsSet(true);
+      return this;
+    }
+
+    public void unsetSuccess() {
+      __isset_bit_vector.clear(__SUCCESS_ISSET_ID);
+    }
+
+    /** Returns true if field success is set (has been asigned a value) and false otherwise */
+    public boolean isSetSuccess() {
+      return __isset_bit_vector.get(__SUCCESS_ISSET_ID);
+    }
+
+    public void setSuccessIsSet(boolean value) {
+      __isset_bit_vector.set(__SUCCESS_ISSET_ID, value);
+    }
+
+    public void setFieldValue(_Fields field, Object value) {
+      switch (field) {
+      case SUCCESS:
+        if (value == null) {
+          unsetSuccess();
+        } else {
+          setSuccess((Integer)value);
+        }
+        break;
+
+      }
+    }
+
+    public Object getFieldValue(_Fields field) {
+      switch (field) {
+      case SUCCESS:
+        return new Integer(getSuccess());
+
+      }
+      throw new IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been asigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new IllegalArgumentException();
+      }
+
+      switch (field) {
+      case SUCCESS:
+        return isSetSuccess();
+      }
+      throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof rank_result)
+        return this.equals((rank_result)that);
+      return false;
+    }
+
+    public boolean equals(rank_result that) {
+      if (that == null)
+        return false;
+
+      boolean this_present_success = true;
+      boolean that_present_success = true;
+      if (this_present_success || that_present_success) {
+        if (!(this_present_success && that_present_success))
+          return false;
+        if (this.success != that.success)
+          return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      return 0;
+    }
+
+    public int compareTo(rank_result other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+      rank_result typedOther = (rank_result)other;
+
+      lastComparison = Boolean.valueOf(isSetSuccess()).compareTo(typedOther.isSetSuccess());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetSuccess()) {
+        lastComparison = TBaseHelper.compareTo(this.success, typedOther.success);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(TProtocol iprot) throws TException {
+      TField field;
+      iprot.readStructBegin();
+      while (true)
+      {
+        field = iprot.readFieldBegin();
+        if (field.type == TType.STOP) { 
+          break;
+        }
+        switch (field.id) {
+          case 0: // SUCCESS
+            if (field.type == TType.I32) {
+              this.success = iprot.readI32();
+              setSuccessIsSet(true);
+            } else { 
+              TProtocolUtil.skip(iprot, field.type);
+            }
+            break;
+          default:
+            TProtocolUtil.skip(iprot, field.type);
+        }
+        iprot.readFieldEnd();
+      }
+      iprot.readStructEnd();
+
+      // check for required fields of primitive type, which can't be checked in the validate method
+      validate();
+    }
+
+    public void write(TProtocol oprot) throws TException {
+      oprot.writeStructBegin(STRUCT_DESC);
+
+      if (this.isSetSuccess()) {
+        oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
+        oprot.writeI32(this.success);
+        oprot.writeFieldEnd();
+      }
+      oprot.writeFieldStop();
+      oprot.writeStructEnd();
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder("rank_result(");
+      boolean first = true;
+
+      sb.append("success:");
+      sb.append(this.success);
       first = false;
       sb.append(")");
       return sb.toString();
