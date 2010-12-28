@@ -14,11 +14,14 @@ service	TreapDBService{
 	list<Pair> bulkPrefix(1:list<string> prefixList,2:i32 limit,3:string startK,4:bool asc),
 	list<Pair> kmax(1:i32 k),
 	list<Pair> kmin(1:i32 k),
+	Pair kth(1:i32 k,2:bool asc),
 	list<Pair> range(1:string kStart, 2:string kEnd,3:i32 limit),
+	i32 rank(1:string key,2:bool asc),
 	list<Pair> before(1:string key,2:i32 limit),
 	list<Pair> after(1:string key,2:i32 limit),
 	i32 length(),
 	bool remove(1:string key),
 	bool removePrefix(1:string key),
-	void optimize(1:i32 amount)
+	void optimize(1:i32 amount),
+	
 } 

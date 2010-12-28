@@ -325,6 +325,56 @@ public void testAfter() throws Exception{
 		
 	}
 	
+	public void testRank() throws Exception{
+		DiskTreap<String, Integer> strKeyIndex = new DiskTreap<String, Integer>(prepareDataStringKey());
+		assertEquals(2,strKeyIndex.rank("IBM", true));
+		assertEquals(3,strKeyIndex.rank("IBM", false));
+		strKeyIndex.close() ;
+		
+		//=======
+		
+		DiskTreap<Integer, String> intKeyIndex = new DiskTreap<Integer, String>(prepareDataFastIntKey());
+		assertEquals(2,intKeyIndex.rank(0, true));
+		assertEquals(3,intKeyIndex.rank(0, false));
+		intKeyIndex.close() ;
+		
+		//=======
+		
+		DiskTreap<FastString, byte[]> fastStringIndex = new DiskTreap<FastString, byte[]>(prepareDataFastStringKey());
+		assertEquals(2,fastStringIndex.rank(new FastString("18 year"), true));
+		assertEquals(3,fastStringIndex.rank(new FastString("18 year"), false));
+		assertEquals(-1,fastStringIndex.rank(new FastString("xxxx"),true));
+		fastStringIndex.close() ;
+	}
+	
+	public void testKth() throws Exception{
+		
+		DiskTreap<String, Integer> strKeyIndex = new DiskTreap<String, Integer>(prepareDataStringKey());
+		
+	    assertEquals("IBM",strKeyIndex.kth(2,true).getKey());
+	    assertEquals("aab",strKeyIndex.kth(2,false).getKey());
+		strKeyIndex.close() ;
+		
+		//=======
+		
+		DiskTreap<Integer, String> intKeyIndex = new DiskTreap<Integer, String>(prepareDataFastIntKey());
+		
+		assertEquals(new Integer(133),intKeyIndex.kth(3,true).getKey());
+		assertEquals(new Integer(0),intKeyIndex.kth(3,false).getKey());
+		intKeyIndex.close() ;
+		
+		//=======
+		
+		DiskTreap<FastString, byte[]> fastStringIndex = new DiskTreap<FastString, byte[]>(prepareDataFastStringKey());
+		assertEquals("IBM",fastStringIndex.kth(3,true).getKey().toString());
+		assertEquals("18 year",fastStringIndex.kth(3,false).getKey().toString());
+
+		assertNull(fastStringIndex.kth(-10, true));
+		assertNull(fastStringIndex.kth(100, false));
+		fastStringIndex.close() ;
+		
+	}
+
 	public void testRange() throws Exception{
 		
 		DiskTreap<String, Integer> strKeyIndex = new DiskTreap<String, Integer>(prepareDataStringKey());

@@ -18,9 +18,11 @@ import fx.sunjoy.server.cmd.DelCommand;
 import fx.sunjoy.server.cmd.GetCommand;
 import fx.sunjoy.server.cmd.KMaxCommand;
 import fx.sunjoy.server.cmd.KMinCommand;
+import fx.sunjoy.server.cmd.KthCommand;
 import fx.sunjoy.server.cmd.LenCommand;
 import fx.sunjoy.server.cmd.PrefixCommand;
 import fx.sunjoy.server.cmd.RangeCommand;
+import fx.sunjoy.server.cmd.RankCommand;
 import fx.sunjoy.server.cmd.SetCommand;
 import fx.sunjoy.server.cmd.SyncCommand;
 import fx.sunjoy.utils.FastString;
@@ -98,6 +100,10 @@ public class TreapDBTextProtocolServer {
 							new AfterCommand().execute(diskTreap,msg.command,msg.body, os);
 						}else if(msg.command.startsWith("bulkget ")){
 							new BulkGetCommand().execute(diskTreap,msg.command,msg.body, os);
+						}else if(msg.command.startsWith("kth ")){
+							new KthCommand().execute(diskTreap,msg.command,msg.body, os);
+						}else if(msg.command.startsWith("rank ")){
+							new RankCommand().execute(diskTreap,msg.command,msg.body, os);
 						}else{
 							os.write("ERROR\r\n".getBytes());
 						}

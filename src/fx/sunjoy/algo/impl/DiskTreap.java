@@ -280,7 +280,8 @@ public class DiskTreap<K extends Comparable<K>,V extends Serializable> implement
 		try {
 			Map<K,V> result = new LinkedHashMap<K, V>();
 			DiskTreapHeader header = this.blockUtil.readHeader();
-			if(k>header.size)k=header.size;
+			int len = length();
+			if(k>len)k=len;
 			if(k<0)k=0;
 			collectKMin(header.rootNo, k,result);
 			return result;
@@ -296,7 +297,8 @@ public class DiskTreap<K extends Comparable<K>,V extends Serializable> implement
 		try {
 			Map<K,V> result = new LinkedHashMap<K, V>();
 			DiskTreapHeader header = this.blockUtil.readHeader();
-			if(k>header.size)k=header.size;
+			int len = length();
+			if(k>len)k=len;
 			if(k<0)k=0;
 			collectKMax(header.rootNo, k,result);
 			return result;
@@ -1114,6 +1116,134 @@ public class DiskTreap<K extends Comparable<K>,V extends Serializable> implement
 			this.blockUtil.writeNode(startNode, currentNode, false);
 		}
 		return startNode;
+	}
+
+	@Override
+	public Entry<K, V> kth(int k, boolean asc) {
+		lock.readLock().lock();
+		try {
+			DiskTreapHeader header = this.blockUtil.readHeader();
+			if(k>length())k=0;
+			if(k<0)k=0;
+			return findKth(header.rootNo, k,asc);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}finally{
+			lock.readLock().unlock();
+		}
+	}
+
+	/**
+	 * 第K个
+	 * @param rootNo
+	 * @param k
+	 * @param asc 顺序数还是逆序数
+	 * @return
+	 * @throws Exception
+	 */
+	private Entry<K, V> findKth(int rootNo, int k, boolean asc) throws Exception {
+		if(rootNo==-1){
+			return null;
+		}
+		final DiskTreapNode<K, V> startNode = this.blockUtil.readNode(rootNo, false);
+		if(asc){
+			if(k<=startNode.l_size){
+				return findKth(startNode.lNo,k,true);
+			}else if(k==startNode.l_size+1){
+				this.blockUtil.filleNodeValue(startNode);
+				return  new Entry<K, V>() {
+
+					@Override
+					public K getKey() {
+						return startNode.key;
+					}
+					@Override
+					public V getValue() {
+						return startNode.value;
+					}
+					@Override
+					public V setValue(V value) {
+						return null;
+					}
+					
+					@Override
+					public String toString() {
+						return "{"+getKey()+"=>"+getValue()+"}";
+					}
+				};
+			}else{
+				return findKth(startNode.rNo,k-startNode.l_size-1,true);
+			}
+		}else{
+			if(k<=startNode.r_size){
+				return findKth(startNode.rNo,k,false);
+			}else if(k==startNode.r_size+1){
+				this.blockUtil.filleNodeValue(startNode);
+				return new Entry<K,V>(){
+					@Override
+					public K getKey() {
+						return startNode.key;
+					}
+					@Override
+					public V getValue() {
+						return startNode.value;
+					}
+					@Override
+					public V setValue(V value) {
+						return null;
+					}
+					@Override
+					public String toString() {
+						return "{"+getKey()+"=>"+getValue()+"}";
+					}
+				};
+			}else{
+				return findKth(startNode.lNo,k-startNode.r_size-1,false);
+			}
+		}
+	}
+
+	/**
+	 * 排名
+	 */
+	@Override
+	public int rank(K key, boolean asc) {
+		lock.readLock().lock();
+		try {
+			DiskTreapHeader header = this.blockUtil.readHeader();
+			return getRank(header.rootNo,key,asc);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}finally{
+			lock.readLock().unlock();
+		}
+	}
+
+	private int getRank(int rootNo, K key, boolean asc) throws Exception {
+		if(rootNo==-1)return -1;
+		DiskTreapNode<K, V> startNode = this.blockUtil.readNode(rootNo, false);
+		int cp = key.compareTo(startNode.key);
+		if(asc){
+			if(cp==0){
+				return startNode.l_size+1; 
+			}else if(cp<0){
+				return getRank(startNode.lNo,key,true);
+			}else{
+				int r_rank = getRank(startNode.rNo,key,true);
+				if(r_rank==-1)return -1;
+				return startNode.l_size+1+r_rank;
+			}
+		}else{
+			if(cp==0){
+				return startNode.r_size+1;
+			}else if(cp>0){
+				return getRank(startNode.rNo,key,false);
+			}else{
+				int l_rank = getRank(startNode.lNo,key,false);
+				if(l_rank==-1)return -1;
+				return startNode.r_size+1+l_rank;
+			}
+		}
 	}
 
 }

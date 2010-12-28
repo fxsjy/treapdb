@@ -78,8 +78,7 @@ public class TreapDBBinaryProtocolServer implements Iface{
 		byte[] result = (byte[])treap.get(new FastString(key));
 		if(result==null)return ByteBuffer.allocate(0);
 		
-		byte[] realvalue = new byte[result.length - 4] ;
-		System.arraycopy(result, 4, realvalue, 0, realvalue.length);
+		byte[] realvalue = skipFlag(result);
 		
 		return ByteBuffer.wrap(realvalue);
 		//return ByteBuffer.wrap(result);
@@ -88,12 +87,18 @@ public class TreapDBBinaryProtocolServer implements Iface{
 	private List<Pair> mapToList(Map<FastString, byte[]> r1) {
 		List<Pair> r2 = new ArrayList<Pair>();
 		for(Entry<FastString,byte[]> e: r1.entrySet()){
-			byte[] realvalue = new byte[e.getValue().length - 4] ;
-			System.arraycopy(e.getValue(), 4, realvalue, 0, realvalue.length) ;
-			Pair pair = new Pair(new String(e.getKey().bytes), ByteBuffer.wrap(realvalue));
+			byte[] rawValue = e.getValue();
+			byte[] realvalue = skipFlag(rawValue);
+			Pair pair = new Pair(e.getKey().toString(), ByteBuffer.wrap(realvalue));
 			r2.add( pair);
 		}
 		return r2;
+	}
+
+	private byte[] skipFlag(byte[] rawValue) {
+		byte[] realvalue = new byte[rawValue.length - 4] ;
+		System.arraycopy(rawValue, 4, realvalue, 0, realvalue.length) ;
+		return realvalue;
 	}
 
 	@Override
@@ -205,6 +210,21 @@ public class TreapDBBinaryProtocolServer implements Iface{
 	@Override
 	public void optimize(int amount) throws TException {
 		treap.optimize(amount);
+	}
+
+	@Override
+	public Pair kth(int k, boolean asc) throws TException {
+		Entry<FastString,byte[]> e = treap.kth(k, asc);
+		if(e==null){
+			return new Pair();
+		}else{
+			return new Pair(e.getKey().toString(),ByteBuffer.wrap(skipFlag(e.getValue())));
+		}
+	}
+
+	@Override
+	public int rank(String key, boolean asc) throws TException {
+		return treap.rank(new FastString(key), asc);
 	}
 
 	
