@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.io.Serializable;
+import java.lang.ref.SoftReference;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
@@ -56,7 +57,7 @@ public class BlockUtil<K extends Comparable<K>,V extends Serializable> {
 	private List<FileChannel> readIndexFileList = new ArrayList<FileChannel>();
 	private final int READ_INDEX_COUNT = 5;
 	
-	private Map<Integer,DiskTreapNode<K, V>> nodeCache =  new LRUMap<Integer, DiskTreapNode<K,V>>(100000);
+	private Map<Integer,SoftReference<DiskTreapNode<K, V>>> nodeCache =  new LRUMap<Integer, SoftReference<DiskTreapNode<K, V>>>(100000);
 	private final List<MappedByteBuffer> writeMMBuf = new ArrayList<MappedByteBuffer>();
 	private final List<ByteBuffer> readMMBuf = new ArrayList<ByteBuffer>();
 	
@@ -279,10 +280,13 @@ public class BlockUtil<K extends Comparable<K>,V extends Serializable> {
 	//读一个节点
 	@SuppressWarnings("unchecked")
 	public DiskTreapNode<K,V>  readNode(int pos,boolean loadValue) throws Exception {
-		DiskTreapNode<K,V>  tmp;
+		SoftReference<DiskTreapNode<K, V>>  tmp;
 		//System.out.println(">>"+nodeCache);
 		if(!loadValue &&  (tmp= nodeCache.get(pos))!=null){
-			return tmp;
+			DiskTreapNode<K,V> node = tmp.get();
+	        if (node != null) {
+	            return node;
+	        }
 		}
 		FileChannel rIndex = getReadOnlyIndex();
 		iocounter++;
@@ -305,8 +309,10 @@ public class BlockUtil<K extends Comparable<K>,V extends Serializable> {
 				//如果是小对象，不读数据文件了，直接从“借用”索引的地方保存
 			}
 		}
-		if (node.value == null)
-			nodeCache.put(pos, node);
+		if (node.value == null){
+			 SoftReference<DiskTreapNode<K,V>> softReference = new SoftReference<DiskTreapNode<K,V>>(node);
+		     nodeCache.put(pos, softReference);
+		}
 		//System.out.println("<<"+nodeCache);
 		return node;
 	}
@@ -319,7 +325,7 @@ public class BlockUtil<K extends Comparable<K>,V extends Serializable> {
 	
 	//写一个节点
 	public void writeNode(int pos,DiskTreapNode<K,V> node,boolean changeValue) throws Exception{
-		nodeCache.put(pos, node);
+		nodeCache.put(pos, new SoftReference<DiskTreapNode<K, V>>(node));
 		if(changeValue){
 			//byte[] byteValue = ByteUtil.dumpV(node.value);
 			byte[] byteValue = ByteUtil.dumpV_MS(node.key, node.value) ;
