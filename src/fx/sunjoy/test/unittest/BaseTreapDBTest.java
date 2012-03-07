@@ -25,7 +25,6 @@ public class BaseTreapDBTest extends TestCase {
 		return indexFile;
 	}
 	
-	
 	private File prepareDataFastStringKey() throws Exception{
 		File indexFile = new File("tmp/fast_str_key_index");
 		indexFile.delete();
